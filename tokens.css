@@ -1,0 +1,170 @@
+:root {
+  /* ============================================================
+     VITAFORGE — dark-gamer fitness mini-app design system
+     "Fortnite skins selector, but for fitness"
+     Charcoal + neumorphic soft-UI + single cyan accent
+     ============================================================ */
+
+  /* ---------- BACKGROUND (top-lit charcoal gradient) ---------- */
+  --bg-base:            #1B1E27;   /* page fallback solid */
+  --bg-grad-top:        #262A36;   /* lighter, "light source" top */
+  --bg-grad-mid:        #1B1E27;
+  --bg-grad-bottom:     #14161D;   /* deepest, sinks downward */
+  --bg-gradient:        radial-gradient(120% 80% at 50% -10%, #2A2F3D 0%, #1B1E27 46%, #14161D 100%);
+  --bg-gradient-linear: linear-gradient(180deg, #262A36 0%, #1B1E27 52%, #14161D 100%);
+  --bg-vignette:        radial-gradient(140% 100% at 50% 0%, transparent 55%, rgba(0,0,0,0.45) 100%);
+
+  /* ---------- SURFACES (one notch lighter than bg — shadows do the work) ---------- */
+  --surface-1:          #22262F;   /* default neumorphic card */
+  --surface-2:          #272C36;   /* raised / hovered card */
+  --surface-3:          #2C313C;   /* top tile, pill track-light edge */
+  --surface-sunken:     #181B22;   /* inset wells, progress tracks */
+  --surface-glass:      rgba(38, 43, 54, 0.55);   /* glassy payment tiles */
+  --surface-glass-2:    rgba(50, 56, 70, 0.42);
+  --surface-overlay:    rgba(12, 14, 19, 0.72);    /* modal scrim */
+
+  /* ---------- NEUMORPHIC SHADOW RECIPES ----------
+     Dual light: dark shadow down-right + faint highlight up-left.
+     Highlight kept very low-alpha (dark-UI neumorphism). */
+  --nm-dist:            7px;       /* base offset */
+  --nm-blur:            16px;      /* base blur */
+  --shadow-dark:        rgba(0, 0, 0, 0.55);
+  --shadow-dark-soft:   rgba(0, 0, 0, 0.38);
+  --shadow-light:       rgba(255, 255, 255, 0.045);
+  --shadow-light-soft:  rgba(255, 255, 255, 0.03);
+
+  /* raised: default tactile card / button */
+  --nm-raised:
+      7px 7px 16px var(--shadow-dark),
+     -6px -6px 14px var(--shadow-light);
+  /* raised-sm: small tiles, chips */
+  --nm-raised-sm:
+      4px 4px 9px var(--shadow-dark-soft),
+     -3px -3px 8px var(--shadow-light-soft);
+  /* raised-lg: hero / character stage card */
+  --nm-raised-lg:
+      14px 16px 34px rgba(0,0,0,0.6),
+     -8px -8px 22px var(--shadow-light);
+  /* pressed: inverted inset (active/selected state) */
+  --nm-pressed:
+      inset 5px 5px 12px var(--shadow-dark),
+      inset -5px -5px 11px var(--shadow-light);
+  /* pressed-sm */
+  --nm-pressed-sm:
+      inset 3px 3px 7px var(--shadow-dark-soft),
+      inset -2px -2px 6px var(--shadow-light-soft);
+  /* sunken well: progress / ring track */
+  --nm-well:
+      inset 4px 4px 10px rgba(0,0,0,0.6),
+      inset -3px -3px 8px rgba(255,255,255,0.035);
+  /* floating: detached tab bar, FAB */
+  --nm-float:
+      0 18px 40px rgba(0,0,0,0.55),
+     -6px -6px 18px rgba(255,255,255,0.035);
+
+  /* ---------- ACCENT (cyan / teal — the single hero color) ---------- */
+  --accent:             #3FD3D8;   /* primary cyan */
+  --accent-bright:      #5EE6EA;   /* gradient light stop / hover */
+  --accent-deep:        #28B6BD;   /* gradient deep stop / pressed */
+  --accent-ink:         #06262B;   /* text on cyan pill */
+  --accent-grad:        linear-gradient(135deg, #5EE6EA 0%, #3FD3D8 48%, #28B6BD 100%);
+  --accent-grad-soft:   linear-gradient(135deg, rgba(94,230,234,0.16), rgba(40,182,189,0.10));
+  --accent-tint:        rgba(63, 211, 216, 0.12);   /* faint fill behind accents */
+  --accent-line:        rgba(63, 211, 216, 0.45);   /* hairline / focus ring */
+
+  /* ---------- STATUS ---------- */
+  --success:            #46D6A0;
+  --success-tint:       rgba(70, 214, 160, 0.14);
+  --warn:               #F4B740;
+  --warn-tint:          rgba(244, 183, 64, 0.14);
+  --danger:            #F2585B;
+  --danger-tint:        rgba(242, 88, 91, 0.14);
+  --star:               #FFC53D;   /* 5-star rating gold */
+  --star-empty:         rgba(255, 255, 255, 0.14);
+
+  /* ---------- TEXT ---------- */
+  --text-hi:            #F4F6FB;   /* names, prices, headings */
+  --text-mid:           #C2C8D4;   /* body */
+  --text-muted:         #7E8696;   /* stat labels (Type / Release / Price) */
+  --text-faint:         #565E6E;   /* disabled, hints */
+  --text-on-accent:     #06262B;
+
+  /* ---------- BORDERS / HAIRLINES ---------- */
+  --border-soft:        rgba(255, 255, 255, 0.06);
+  --border-hairline:    rgba(255, 255, 255, 0.09);
+  --border-glass:       rgba(255, 255, 255, 0.12);
+  --divider:            rgba(255, 255, 255, 0.05);
+
+  /* ---------- RADIUS SCALE ---------- */
+  --r-xs:   8px;
+  --r-sm:   12px;
+  --r-md:   18px;
+  --r-lg:   24px;    /* standard card */
+  --r-xl:   28px;    /* character stage / hero card */
+  --r-2xl:  34px;    /* tab bar shell */
+  --r-pill: 999px;
+
+  /* ---------- SPACING SCALE (8px base) ---------- */
+  --sp-0:   2px;
+  --sp-1:   4px;
+  --sp-2:   8px;
+  --sp-3:   12px;
+  --sp-4:   16px;
+  --sp-5:   20px;
+  --sp-6:   24px;
+  --sp-7:   32px;
+  --sp-8:   40px;
+  --sp-9:   56px;
+  --sp-10:  72px;
+
+  /* ---------- TYPE SCALE ---------- */
+  --font-ui:    "Manrope", "SF Pro Display", system-ui, -apple-system, sans-serif;
+  --font-num:   "Manrope", "SF Pro Display", system-ui, sans-serif; /* tabular-nums */
+
+  --fs-display: 34px;   /* character name / big price */
+  --fs-h1:      26px;
+  --fs-h2:      21px;
+  --fs-h3:      17px;
+  --fs-body:    15px;
+  --fs-sm:      13px;
+  --fs-xs:      11px;
+  --fs-label:   11px;   /* UPPERCASE eyebrow / pill text */
+
+  --fw-x:       800;    /* ExtraBold — names, prices, CTA */
+  --fw-bold:    700;
+  --fw-semi:    600;
+  --fw-med:     500;
+  --fw-reg:     400;
+
+  --lh-tight:   1.05;
+  --lh-snug:    1.25;
+  --lh-body:    1.5;
+  --tracking-label: 0.14em;   /* wide caps for CHOOSE SKIN / TYPE */
+  --tracking-tight: -0.01em;
+  --num-feat:   "tnum" 1, "lnum" 1;  /* tabular-nums, no dotted zero */
+
+  /* ---------- GLOW ---------- */
+  --glow-cyan:       0 0 28px rgba(63, 211, 216, 0.45);
+  --glow-cyan-sm:    0 0 14px rgba(63, 211, 216, 0.35);
+  --glow-cyan-strong:0 0 44px rgba(63, 211, 216, 0.6), 0 8px 24px rgba(40,182,189,0.4);
+  --glow-pill:       0 10px 26px rgba(40, 182, 189, 0.42), 0 0 18px rgba(94,230,234,0.30);
+  --glow-ambient:    0 0 60px rgba(63, 211, 216, 0.10);  /* faint card aura */
+  --glow-star:       0 0 10px rgba(255, 197, 61, 0.5);
+  --glow-success:    0 0 16px rgba(70, 214, 160, 0.45);
+
+  /* ---------- MOTION ---------- */
+  --ease-out:    cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);   /* overshoot / pop */
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-press:   90ms;
+  --dur-fast:    160ms;
+  --dur-base:    260ms;
+  --dur-slow:    420ms;
+  --dur-burst:   620ms;   /* level-up / loot */
+
+  /* ---------- LAYOUT ---------- */
+  --tabbar-h:        72px;
+  --safe-bottom:     env(safe-area-inset-bottom, 0px);
+  --screen-pad:      20px;
+  --grid-gap:        16px;
+}

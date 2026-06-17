@@ -1,0 +1,828 @@
+/* ============================================================
+   VITAFORGE — gamified fitness mini-app (v2)
+   Локальный движок: тренировки, питание, аватар-стадии, XP.
+   ============================================================ */
+(function () {
+'use strict';
+
+// ---------- Telegram ----------
+var tg = window.Telegram && window.Telegram.WebApp;
+try { if (tg) { tg.ready(); tg.expand(); if (tg.setHeaderColor) tg.setHeaderColor('#1B1E27'); if (tg.setBackgroundColor) tg.setBackgroundColor('#1B1E27'); } } catch (e) {}
+function haptic(t) { try { if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred(t || 'light'); } catch (e) {} }
+
+// ---------- DOM helpers ----------
+function $(s, r) { return (r || document).querySelector(s); }
+function $all(s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); }
+function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function clamp(v, a, b) { return Math.max(a, Math.min(b, v)); }
+function fmt(n) { return Math.round(n).toLocaleString('ru-RU'); }
+
+// ---------- Dates ----------
+function dayKey(d) { d = d || new Date(); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+function parseKey(k) { var p = k.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+function daysBetween(a, b) { return Math.round((b - a) / 86400000); }
+var WD = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+var MON = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл', 'авг', 'сен', 'окт', 'ноя', 'дек'];
+function ddmm(d) { return d.getDate() + ' ' + MON[d.getMonth()]; }
+
+// ---------- Storage / state ----------
+var KEY = 'vitaforge_v2';
+var S = null;
+function defaultState() {
+  return {
+    v: 2, onboarded: false, createdAt: Date.now(),
+    profile: { name: 'Атлет', sex: 'm', age: 28, height: 178, weight: 75, goal: 'recomp', days: 3, equipment: 'gym', diet: 'all', bodyFat: null },
+    program: JSON.parse(JSON.stringify(window.DEFAULT_PROGRAM)),
+    sessions: [],
+    bestE1RM: {},
+    meals: {},
+    usedRecipes: {},
+    xp: 0,
+    nutXp: 0,
+    streak: { count: 0, last: null, freezes: 1 },
+    nutStreak: { count: 0, last: null },
+    reachedStage: 1,
+    gold: 0,
+    quests: { stamp: null, daily: [], weekly: [] },
+    bodyLog: [],
+    docs: []
+  };
+}
+function load() {
+  try { var raw = localStorage.getItem(KEY); if (raw) { S = JSON.parse(raw); } } catch (e) {}
+  if (!S || S.v !== 2) S = defaultState();
+  if (!S.program) S.program = JSON.parse(JSON.stringify(window.DEFAULT_PROGRAM));
+  return S;
+}
+function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+
+// ---------- Strength math ----------
+function e1rm(w, reps) { return w * (1 + reps / 30); }
+function allEx() { var a = []; S.program.days.forEach(function (d) { d.exercises.forEach(function (e) { a.push({ ex: e, day: d }); }); }); return a; }
+function exById(id) { var r = null; allEx().forEach(function (o) { if (o.ex.id === id) r = o; }); return r; }
+function workingE1RM(e) { return e1rm(e.weight, Math.max(e.range ? e.range[0] : e.reps, 1)); }
+function bestOf(exId, fallback) { var b = S.bestE1RM[exId]; return b != null ? b : fallback; }
+function liftLevel(e) { var best = bestOf(e.id, workingE1RM(e)); return Math.max(1, Math.round(best / 2.5)); }
+
+var KEY_LIFTS = ['bench_mch', 'low_row', 'leg_ext', 'leg_curl', 'biceps_bar'];
+function strengthIndex() {
+  var sum = 0;
+  KEY_LIFTS.forEach(function (id) { var o = exById(id); if (o) sum += bestOf(id, workingE1RM(o.ex)); });
+  return sum / Math.max(S.profile.weight, 1);
+}
+
+// ---------- XP / Level ----------
+function lvlCost(L) { return Math.round(120 * Math.pow(L - 1, 1.4)); }
+function levelInfo(totalXp) {
+  var L = 1, acc = 0;
+  while (true) { var c = lvlCost(L + 1); if (acc + c > totalXp) break; acc += c; L++; if (L > 200) break; }
+  var into = totalXp - acc, need = lvlCost(L + 1);
+  return { level: L, into: into, need: need, pct: clamp(into / need * 100, 0, 100) };
+}
+function addXp(n, nutrition) { if (nutrition) S.nutXp += n; S.xp += n; }
+
+// ---------- Avatar stage (honest, monotonic) ----------
+var STAGE = {
+  2: [1.4, 4, 1.5, 24, 32],
+  3: [2.1, 14, 2.0, 18, 27],
+  4: [2.9, 28, 2.3, 15, 23],
+  5: [3.7, 52, 2.6, 12, 20],
+  6: [4.6, 96, 2.8, 10, 18]
+};
+function recentConsistency() {
+  var now = new Date(), c = 0;
+  S.sessions.forEach(function (s) { if (daysBetween(parseKey(s.date), now) <= 28) c++; });
+  return c / 4;
+}
+function stageAxes() {
+  var nextS = Math.min(S.reachedStage + 1, 6);
+  var th = STAGE[nextS] || STAGE[6];
+  var bf = S.profile.bodyFat;
+  var bfMax = S.profile.sex === 'f' ? th[4] : th[3];
+  var axes = [
+    { name: 'Сила', val: strengthIndex(), goal: th[0] },
+    { name: 'Постоянство', val: recentConsistency(), goal: th[2] },
+    { name: 'Объём', val: S.sessions.length, goal: th[1] }
+  ];
+  if (bf != null) axes.push({ name: 'Сушка', val: 0, goal: th[0], bf: true, bfVal: bf, bfMax: bfMax });
+  return { axes: axes, nextStage: nextS };
+}
+function computeStage() {
+  var st = 1;
+  for (var s = 2; s <= 6; s++) {
+    var th = STAGE[s];
+    var bfOk = true;
+    if (S.profile.bodyFat != null) { var m = S.profile.sex === 'f' ? th[4] : th[3]; bfOk = S.profile.bodyFat <= m + 0.5; }
+    if (strengthIndex() >= th[0] && S.sessions.length >= th[1] && recentConsistency() >= th[2] && bfOk) st = s; else break;
+  }
+  if (st > S.reachedStage) S.reachedStage = st;
+  return S.reachedStage;
+}
+function stageData() { var i = clamp(computeStage(), 1, 6) - 1; return window.CHARACTER_STAGES[i]; }
+
+// ---------- Nutrition ----------
+var PAL = function (days) { return days <= 2 ? 1.375 : days <= 4 ? 1.55 : 1.725; };
+function targets() {
+  var p = S.profile;
+  var bmr = 10 * p.weight + 6.25 * p.height - 5 * p.age + (p.sex === 'f' ? -161 : 5);
+  var tdee = bmr * PAL(p.days);
+  var gf = p.goal === 'cut' ? 0.8 : p.goal === 'bulk' ? 1.1 : 1.0;
+  var kcal = Math.round(tdee * gf / 10) * 10;
+  var protein = Math.round((p.goal === 'cut' ? 2.2 : 1.8) * p.weight);
+  var fat = Math.round(0.9 * p.weight);
+  var carbs = Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4));
+  return { kcal: kcal, protein: protein, fat: fat, carbs: carbs, tdee: Math.round(tdee) };
+}
+function eatenToday() {
+  var list = S.meals[dayKey()] || [], t = { kcal: 0, protein: 0, fat: 0, carbs: 0, slots: {} };
+  list.forEach(function (m) { t.kcal += m.kcal; t.protein += m.p; t.fat += m.f; t.carbs += m.c; t.slots[m.slot] = true; });
+  return t;
+}
+function slotByHour() { var h = new Date().getHours(); return h < 11 ? 'breakfast' : h < 16 ? 'lunch' : h < 21 ? 'dinner' : 'snack'; }
+var SLOT_SHARE = { breakfast: 0.25, lunch: 0.35, dinner: 0.30, snack: 0.10 };
+var SLOT_RU = { breakfast: 'Завтрак', lunch: 'Обед', dinner: 'Ужин', snack: 'Перекус' };
+
+function dietBlocks(diet) {
+  if (diet === 'nodairy') return ['молок', 'творог', 'сыр', 'йогурт', 'кефир'];
+  if (diet === 'veg') return ['кур', 'говяд', 'индейк', 'рыб', 'лосос', 'тунец', 'свин', 'фарш', 'телятин'];
+  if (diet === 'nogluten') return ['хлеб', 'овсян', 'паста', 'булгур', 'тортиль', 'макарон', 'мук'];
+  return [];
+}
+function recipeAllowed(r) {
+  var blocks = dietBlocks(S.profile.diet);
+  if (!blocks.length) return true;
+  var bad = false;
+  r.ingredients.forEach(function (ing) { var low = ing.item.toLowerCase(); blocks.forEach(function (b) { if (low.indexOf(b) >= 0) bad = true; }); });
+  return !bad;
+}
+function generateMeal(slot) {
+  slot = slot || slotByHour();
+  var tg2 = targets(), eaten = eatenToday();
+  var rem = { kcal: Math.max(0, tg2.kcal - eaten.kcal), p: Math.max(0, tg2.protein - eaten.protein), f: Math.max(0, tg2.fat - eaten.fat), c: Math.max(0, tg2.carbs - eaten.carbs) };
+  var remShareSum = 0; Object.keys(SLOT_SHARE).forEach(function (sl) { if (!eaten.slots[sl]) remShareSum += SLOT_SHARE[sl]; });
+  if (remShareSum <= 0) remShareSum = SLOT_SHARE[slot];
+  var f2 = SLOT_SHARE[slot] / remShareSum;
+  var slotK = Math.max(150, rem.kcal * f2), slotP = rem.p * f2, slotF = rem.f * f2, slotC = rem.c * f2;
+  var used = S.usedRecipes[dayKey()] || [];
+  var cands = window.RECIPES.filter(function (r) { return r.meal === slot && recipeAllowed(r); });
+  if (!cands.length) cands = window.RECIPES.filter(recipeAllowed);
+  if (!cands.length) cands = window.RECIPES.slice();
+  var scored = cands.map(function (r) {
+    var scale = slotP > 5 ? slotP / r.protein : slotK / r.kcal;
+    scale = clamp(scale, 0.5, 2.5);
+    var sk = r.kcal * scale;
+    if (sk < 0.8 * slotK || sk > 1.2 * slotK) { scale = clamp(slotK / r.kcal, 0.5, 2.5); sk = r.kcal * scale; }
+    var sp = r.protein * scale, sf = r.fat * scale, sc = r.carbs * scale;
+    var score = 1.0 * Math.abs(sp - slotP) / Math.max(slotP, 1) + 0.8 * Math.abs(sk - slotK) / Math.max(slotK, 1)
+      + 0.5 * Math.abs(sf - slotF) / Math.max(slotF, 1) + 0.5 * Math.abs(sc - slotC) / Math.max(slotC, 1);
+    if (used.indexOf(r.name) >= 0) score += 0.4;
+    if (scale <= 0.5 || scale >= 2.5) score += 0.2;
+    return { r: r, scale: scale, kcal: Math.round(sk), p: Math.round(sp), f: Math.round(sf), c: Math.round(sc), score: score };
+  }).sort(function (a, b) { return a.score - b.score; });
+  var top = scored.slice(0, Math.min(3, scored.length));
+  var pick = top[Math.floor(Math.random() * top.length)];
+  pick.slot = slot;
+  pick.ingredients = pick.r.ingredients.map(function (i) { return { item: i.item, grams: Math.round(i.grams * pick.scale / 5) * 5 }; });
+  return pick;
+}
+
+// ---------- Training recommendation ----------
+function lastPerformed(dayId) {
+  var last = null;
+  S.sessions.forEach(function (s) { if (s.dayId === dayId) { var d = parseKey(s.date); if (!last || d > last) last = d; } });
+  return last;
+}
+function recommendDay() {
+  var now = new Date(), best = null, bestScore = -1;
+  S.program.days.forEach(function (d) {
+    var lp = lastPerformed(d.id);
+    var since = lp ? daysBetween(lp, now) : 999;
+    if (since > bestScore) { bestScore = since; best = d; }
+  });
+  return { day: best, since: bestScore };
+}
+function lastSessionFor(exId) {
+  for (var i = S.sessions.length - 1; i >= 0; i--) {
+    var sets = (S.sessions[i].sets || []).filter(function (x) { return x.exId === exId; });
+    if (sets.length) return sets;
+  }
+  return null;
+}
+function exSuggestion(e) {
+  var last = lastSessionFor(e.id);
+  if (!last) return { txt: 'рабочий вес ' + e.weight + ' ' + S.program.units + ' × ' + (e.range ? e.range[0] + '–' + e.range[1] : e.reps), bump: false };
+  var top = e.range ? e.range[1] : e.reps;
+  var allTop = last.length >= (e.sets - 1) && last.every(function (s) { return s.reps >= top; });
+  var hardRpe = last.some(function (s) { return s.rpe >= 9.5; });
+  if (allTop && !hardRpe) return { txt: '➕ добавь ' + e.inc + ' ' + S.program.units + ' → ' + (e.weight + e.inc) + ', сбрось повторы до ' + (e.range ? e.range[0] : top), bump: true };
+  return { txt: 'держи ' + e.weight + ' ' + S.program.units + ', добавь повтор к прошлому', bump: false };
+}
+
+function bumpCalendar(weeks) {
+  weeks = weeks || 12;
+  var events = [], now = new Date(), horizon = new Date(now.getTime() + weeks * 7 * 86400000);
+  S.program.days.forEach(function (d) {
+    var wd = S.program.schedule[d.id];
+    d.exercises.forEach(function (e) {
+      var step = e.stepWeeks || 3, k = 1;
+      while (true) {
+        var wk = step * k;
+        var date = nextWeekday(now, wd, wk);
+        if (date > horizon) break;
+        events.push({ date: date, ex: e.name, w: e.weight + e.inc * k, day: d.name });
+        k++;
+        if (k > 30) break;
+      }
+    });
+  });
+  events.sort(function (a, b) { return a.date - b.date; });
+  return events;
+}
+function nextWeekday(from, wd, addWeeks) {
+  var d = new Date(from.getTime());
+  var diff = (wd - d.getDay() + 7) % 7; if (diff === 0) diff = 7;
+  d.setDate(d.getDate() + diff + (addWeeks - 1) * 7);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+function projectE1RM(e, weeks) {
+  weeks = weeks || 12;
+  var now = workingE1RM(e), steps = Math.floor(weeks / (e.stepWeeks || 3));
+  var future = e1rm(e.weight + e.inc * steps, e.range ? e.range[0] : e.reps);
+  return { now: now, future: future, steps: steps };
+}
+
+// ---------- Streak ----------
+function touchStreak() {
+  var today = dayKey(), last = S.streak.last;
+  if (last === today) return;
+  if (!last) { S.streak.count = 1; }
+  else {
+    var diff = daysBetween(parseKey(last), parseKey(today));
+    if (diff === 1) S.streak.count++;
+    else if (diff > 1) {
+      if (S.streak.freezes > 0) { S.streak.freezes--; toast('🧊 Заморозка использована — рад, что ты вернулся!', 'win'); }
+      else S.streak.count = 1;
+    }
+  }
+  S.streak.last = today;
+}
+function touchNutStreak() {
+  var today = dayKey(), last = S.nutStreak.last;
+  if (last === today) return;
+  if (!last) S.nutStreak.count = 1;
+  else { var diff = daysBetween(parseKey(last), parseKey(today)); S.nutStreak.count = diff === 1 ? S.nutStreak.count + 1 : 1; }
+  S.nutStreak.last = today;
+}
+
+// ---------- Quests ----------
+function ensureQuests() {
+  var today = dayKey();
+  if (S.quests.stamp === today && S.quests.daily.length) return;
+  S.quests.stamp = today;
+  S.quests.daily = [
+    { id: 'd_workout', icon: '🏋️', t: 'Залогируй тренировку', xp: 120, done: false },
+    { id: 'd_protein', icon: '🥩', t: 'Добей дневной белок', xp: 90, done: false },
+    { id: 'd_kcal', icon: '🔥', t: 'Уложись в калории', xp: 75, done: false }
+  ];
+  S.quests.weekly = [
+    { id: 'w_sessions', icon: '📅', t: 'Проведи 3 тренировки за неделю', prog: weeklySessions(), goal: 3, xp: 400 },
+    { id: 'w_pr', icon: '🏆', t: 'Поставь новый PR на любом лифте', prog: 0, goal: 1, xp: 500 },
+    { id: 'w_protein', icon: '💪', t: 'Неделя без пропуска белковой цели', prog: S.nutStreak.count, goal: 7, xp: 350 }
+  ];
+}
+function weeklySessions() { var now = new Date(), c = 0; S.sessions.forEach(function (s) { if (daysBetween(parseKey(s.date), now) < 7) c++; }); return c; }
+function refreshDailyQuests() {
+  var eaten = eatenToday(), tg2 = targets();
+  S.quests.daily.forEach(function (q) {
+    if (q.id === 'd_protein' && eaten.protein >= tg2.protein * 0.95) q.done = true;
+    if (q.id === 'd_kcal' && eaten.kcal >= tg2.kcal * 0.85 && eaten.kcal <= tg2.kcal * 1.1) q.done = true;
+  });
+}
+
+// ---------- Muscles (взаимодействие с 3D-аватаром) ----------
+var MUSCLE_INFO = {
+  chest: { name: 'Грудь', tips: 'Боль в груди или переднем плече после жимов — пауза 3–5 дней. Первые 48 ч лёд 15 мин 2–3 раза в день, затем тепло и мягкая растяжка в дверном проёме. Возврат с 50% рабочего веса, без отказа.' },
+  back: { name: 'Спина', tips: 'Поясница/широчайшие: при простреле — покой 2–3 дня, без осевой нагрузки и наклонов с весом. Лёгкая ходьба, «кошка-корова», планка без боли. Резкая боль с отдачей в ногу — к врачу.' },
+  shoulders: { name: 'Плечи', tips: 'Плечо любит покой при щелчках и боли над головой. Стоп жимы/махи 3–5 дней, лёд, затем лёгкая наружная ротация с резинкой. Через боль не тянуть — ротаторная манжета капризна.' },
+  arms: { name: 'Руки', tips: 'Бицепс/трицепс/локоть: при тендините локтя снизь объём сгибаний, лёгкая эксцентрика, тепло до, лёд после. Боль в сухожилии бицепса у плеча — пауза и малые веса.' },
+  abs: { name: 'Пресс', tips: 'Кор восстанавливается быстро. При перенапряжении — 2–3 дня без прямой нагрузки, дыхательные и планка вполсилы. Резкая боль внизу живота (возможна грыжа) — к врачу.' },
+  legs: { name: 'Ноги', tips: 'Колени/бёдра: при боли в колене урежь глубину и вес, грей до, лёд после. Потянул заднюю/квадрицепс — RICE 48 ч, затем лёгкая растяжка и низкая нагрузка. Хромаешь — пауза.' }
+};
+var EX_MUSCLE = { chest_up: 'chest', chest_low: 'chest', bench_mch: 'chest', biceps_bar: 'arms', triceps_rev: 'arms', delts_lat: 'shoulders', delts_front: 'shoulders', delts_rear: 'shoulders', row_chest: 'back', pullover: 'back', low_row: 'back', abs_plan: 'abs', neck: 'back', leg_ext: 'legs', leg_curl: 'legs', calves: 'legs', glutes: 'legs' };
+function muscleOf(exId) { return EX_MUSCLE[exId] || 'other'; }
+function exForMuscle(id) { return allEx().filter(function (o) { return muscleOf(o.ex.id) === id; }); }
+function muscleMenu(id) {
+  var info = MUSCLE_INFO[id] || { name: 'Мышца' };
+  var h = '<div class="grab"></div><h3>' + esc(info.name) + '</h3>'
+    + '<p style="color:var(--text-muted);font-size:var(--fs-sm);margin:-6px 0 16px">Что нужно по этой группе?</p>'
+    + '<div style="display:grid;gap:10px">'
+    + '<button class="pill" onclick="VF.muscleExercises(\'' + id + '\')">💪 Упражнения</button>'
+    + '<button class="pill ghost" onclick="VF.muscleInjury(\'' + id + '\')">🩹 Травма / восстановление</button></div>';
+  openModal(h);
+}
+function muscleExercises(id) { closeModal(); renderGym.muscle = id; renderGym.seg = 'today'; go('gym'); }
+function muscleInjury(id) {
+  var info = MUSCLE_INFO[id] || { name: 'Мышца', tips: '' };
+  var h = '<div class="grab"></div><h3>🩹 ' + esc(info.name) + ' — восстановление</h3>'
+    + '<div class="coach" style="margin-bottom:14px"><span class="ci">⚠️</span><div>' + esc(info.tips) + '</div></div>'
+    + '<div class="hint">Острая боль, отёк, онемение или щелчок при травме — не геройствуй, покажись врачу/физиотерапевту. Это общие советы, не диагноз.</div>'
+    + '<button class="pill ghost sm" style="margin-top:14px" onclick="VF.closeModal()">Понятно</button>';
+  openModal(h);
+}
+function renderGymMuscle(id) {
+  var info = MUSCLE_INFO[id] || { name: 'Мышца' };
+  var list = exForMuscle(id);
+  var h = '<div class="scr-head"><div><div class="eyebrow">Упражнения</div><h1>' + esc(info.name) + '</h1></div></div>';
+  h += '<button class="btn-chip" style="margin-bottom:14px" onclick="VF.clearMuscle()">← Все тренировки</button>';
+  if (!list.length) h += '<div class="empty">Нет упражнений на эту группу.</div>';
+  list.forEach(function (o) {
+    var e = o.ex, sug = exSuggestion(e);
+    h += '<div class="ex" onclick="VF.openLogger(\'' + e.id + '\')"><div class="ex-top"><div><div class="ex-nm">' + esc(e.name) + '</div>'
+      + '<div class="ex-tg">' + esc(o.day.name.replace(/^День \d+ — /, '')) + ' · ' + e.sets + '×' + (e.range ? e.range[0] + '–' + e.range[1] : e.reps) + '</div></div>'
+      + '<div class="ex-lv">Lv ' + liftLevel(e) + (sug.bump ? ' ⬆' : '') + '</div></div></div>';
+  });
+  h += '<div class="hint">Тапни упражнение — запишешь подход и получишь XP. Веса и прогрессия считаются автоматически.</div>';
+  $('#screen-gym').innerHTML = h;
+}
+
+// ============================================================
+//  RENDER
+// ============================================================
+function ring(pct, kcalCenter, unit, size) {
+  size = size || 168; var r = (size - 24) / 2, c = 2 * Math.PI * r, off = c * (1 - clamp(pct, 0, 100) / 100);
+  return '<div class="ring" style="width:' + size + 'px;height:' + size + 'px">'
+    + '<svg width="' + size + '" height="' + size + '" viewBox="0 0 ' + size + ' ' + size + '">'
+    + '<defs><linearGradient id="cg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5EE6EA"/><stop offset="1" stop-color="#28B6BD"/></linearGradient></defs>'
+    + '<circle cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" fill="none" stroke="#181B22" stroke-width="14"/>'
+    + '<circle cx="' + size / 2 + '" cy="' + size / 2 + '" r="' + r + '" fill="none" stroke="url(#cg)" stroke-width="14" stroke-linecap="round" stroke-dasharray="' + c + '" stroke-dashoffset="' + off + '" transform="rotate(-90 ' + size / 2 + ' ' + size / 2 + ')" style="transition:stroke-dashoffset .8s cubic-bezier(.22,1,.36,1);filter:drop-shadow(0 0 8px rgba(63,211,216,.5))"/>'
+    + '</svg><div class="center"><div class="big tnum">' + kcalCenter + '</div><div class="unit">' + unit + '</div></div></div>';
+}
+function silhouette(stage) {
+  var sw = 30 + stage * 7;
+  var glow = 0.1 + stage * 0.05;
+  return '<div class="silho"><svg viewBox="0 0 120 200" xmlns="http://www.w3.org/2000/svg">'
+    + '<defs><linearGradient id="bg' + stage + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a4150"/><stop offset="1" stop-color="#222732"/></linearGradient>'
+    + '<filter id="gl"><feGaussianBlur stdDeviation="3"/></filter></defs>'
+    + '<g filter="url(#gl)" opacity="' + glow + '"><ellipse cx="60" cy="110" rx="' + sw + '" ry="80" fill="#3FD3D8"/></g>'
+    + '<circle cx="60" cy="24" r="15" fill="url(#bg' + stage + ')"/>'
+    + '<path d="M60 40 C' + (60 - sw) + ' 48 ' + (60 - sw) + ' 70 ' + (60 - sw + 6) + ' 96 L' + (60 - 14) + ' 188 h12 L60 150 l8 38 h12 L' + (60 + sw - 6) + ' 96 C' + (60 + sw) + ' 70 ' + (60 + sw) + ' 48 60 40 z" fill="url(#bg' + stage + ')" stroke="rgba(63,211,216,.4)" stroke-width="1.5"/>'
+    + '</svg></div>';
+}
+
+function renderHome() {
+  ensureQuests(); refreshDailyQuests();
+  var li = levelInfo(S.xp), st = computeStage(), sd = stageData();
+  var p = S.profile, tg2 = targets(), eaten = eatenToday();
+  var kpct = eaten.kcal / tg2.kcal * 100;
+  var b1 = exById('bench_mch'), b2 = exById('leg_ext');
+  var rec = recommendDay();
+  var h = '';
+  h += '<div class="scr-head"><div><div class="eyebrow">VITA<b style="color:var(--accent)">FORGE</b></div><h1>' + esc(p.name) + '</h1></div>'
+    + '<div class="streak"><span class="fl">🔥</span><span class="tnum">' + S.streak.count + '</span> дн.</div></div>';
+  h += '<div class="hero"><div class="hero-card">';
+  h += '<div class="lift-badge l"><div class="nm">Жим</div><div class="lvl">Lv ' + (b1 ? liftLevel(b1.ex) : 1) + '</div><div class="wt tnum">' + (b1 ? b1.ex.weight : '–') + 'кг</div></div>';
+  h += '<div class="lift-badge r"><div class="nm">Ноги</div><div class="lvl">Lv ' + (b2 ? liftLevel(b2.ex) : 1) + '</div><div class="wt tnum">' + (b2 ? b2.ex.weight : '–') + 'кг</div></div>';
+  h += '<div class="avatar" id="avatar"></div>';
+  h += '<div class="stage-tag">Стадия ' + st + ' · ' + esc(sd.title) + '</div>';
+  h += '<div class="hero-name">' + esc(sd.title) + '</div>';
+  h += '<div class="hero-sub">' + esc((sd.bodyFatRange || '').split('—')[0]) + '</div>';
+  h += '<div class="level-line"><div class="level-disc"><b class="tnum">' + li.level + '</b></div>'
+    + '<div class="xpbar"><div class="meta"><span>Уровень ' + li.level + '</span><span><b class="tnum">' + fmt(li.into) + '</b> / ' + fmt(li.need) + ' XP</span></div>'
+    + '<div class="track"><div class="fill" style="width:' + li.pct + '%"></div></div></div></div>';
+  h += '</div></div>';
+  h += '<div class="row2" style="margin-top:var(--sp-5)">';
+  h += '<div class="card" style="margin:0"><div class="eyebrow" style="color:var(--text-muted)">Тренировка дня</div>'
+    + '<div style="color:var(--text-hi);font-weight:800;font-size:var(--fs-h3);margin:6px 0 2px">' + esc(rec.day.name.replace(/^День \d+ — /, '')) + '</div>'
+    + '<div style="color:var(--text-muted);font-size:var(--fs-sm)">' + rec.day.exercises.length + ' упр. · +' + (rec.day.exercises.length * 60) + ' XP</div>'
+    + '<button class="pill sm" style="margin-top:12px" onclick="VF.go(\'gym\')">Начать</button></div>';
+  h += '<div class="card" style="margin:0;text-align:center"><div class="eyebrow" style="color:var(--text-muted);text-align:left">Калории</div>'
+    + ring(kpct, fmt(eaten.kcal), 'из ' + fmt(tg2.kcal), 120)
+    + '<button class="pill sm ghost" style="margin-top:10px" onclick="VF.go(\'food\')">Питание</button></div>';
+  h += '</div>';
+  h += '<div class="section-title">Дейлики</div>';
+  S.quests.daily.forEach(function (q) {
+    h += '<div class="quest ' + (q.done ? 'done' : '') + '"><div class="qi">' + (q.done ? '✓' : q.icon) + '</div>'
+      + '<div><div class="qt">' + esc(q.t) + '</div></div><div class="qr">+' + q.xp + ' XP</div></div>';
+  });
+  $('#screen-home').innerHTML = h;
+  if (window.mountAvatar) window.mountAvatar($('#avatar'), avatarParams());
+}
+function avatarParams() {
+  var st = computeStage();
+  var muscle = clamp((st - 1) / 5, 0, 1);
+  var bf = S.profile.bodyFat;
+  var fat = bf != null ? clamp((bf - 10) / 20, 0, 1) : 0.3;
+  return { gender: S.profile.sex === 'f' ? 'f' : 'm', muscle: muscle, fat: fat };
+}
+
+function renderGym() {
+  if (renderGym.muscle) { return renderGymMuscle(renderGym.muscle); }
+  var seg = renderGym.seg || 'today';
+  var rec = recommendDay();
+  var h = '<div class="scr-head"><div><div class="eyebrow">Зал</div><h1>Качаемся</h1></div></div>';
+  h += '<div class="seg">' + segBtn('today', seg, 'Сессия') + segBtn('progress', seg, 'Прогресс') + segBtn('calendar', seg, 'Календарь') + '</div>';
+  if (seg === 'today') {
+    h += '<div class="coach"><span class="ci">🤖</span><div><b style="color:var(--text-hi)">' + esc(rec.day.name) + '</b><br>Почему этот: дольше всего не тренировал эту группу (' + (rec.since > 90 ? 'ещё не было' : rec.since + ' дн. назад') + ') — восстановилась, бьём её.</div></div>';
+    h += '<div style="height:14px"></div>';
+    rec.day.exercises.forEach(function (e) {
+      var sug = exSuggestion(e);
+      h += '<div class="ex" onclick="VF.openLogger(\'' + e.id + '\')"><div class="ex-top"><div><div class="ex-nm">' + esc(e.name) + '</div>'
+        + '<div class="ex-tg">' + e.sets + '×' + (e.range ? e.range[0] + '–' + e.range[1] : e.reps) + ' · ' + esc(sug.txt) + '</div></div>'
+        + '<div class="ex-lv">Lv ' + liftLevel(e) + (sug.bump ? ' ⬆' : '') + '</div></div></div>';
+    });
+    h += '<button class="pill" style="margin-top:14px" onclick="VF.finishWorkout(\'' + rec.day.id + '\')">Завершить тренировку</button>';
+    h += '<div class="hint">Тапни упражнение, чтобы записать подходы и получить XP. PR подсвечивается золотом и качает уровень лифта.</div>';
+  } else if (seg === 'progress') {
+    h += '<div class="section-title">Уровни лифтов и 1ПМ</div>';
+    allEx().forEach(function (o) {
+      var e = o.ex, pr = projectE1RM(e);
+      h += '<div class="ex"><div class="ex-top"><div><div class="ex-nm">' + esc(e.name) + '</div>'
+        + '<div class="ex-tg tnum">1ПМ сейчас ~' + Math.round(pr.now) + ' → через 12 нед ~' + Math.round(pr.future) + ' ' + S.program.units + '</div></div>'
+        + '<div class="ex-lv">Lv ' + liftLevel(e) + '</div></div>'
+        + '<div class="track" style="margin-top:10px"><div class="fill" style="width:' + clamp(pr.now / pr.future * 100, 5, 100) + '%"></div></div></div>';
+    });
+    h += '<div class="hint">Прогноз построен по двойной прогрессии: шаг прибавки и частота заложены в каждое упражнение. Реальные PR двигают линию быстрее.</div>';
+  } else {
+    h += '<div class="section-title">Когда поднимать вес</div>';
+    var ev = bumpCalendar(12), curMonth = '';
+    if (!ev.length) h += '<div class="empty">Нет запланированных прибавок.</div>';
+    ev.slice(0, 40).forEach(function (x) {
+      var mk = MON[x.date.getMonth()];
+      if (mk !== curMonth) { curMonth = mk; h += '<div class="section-title">' + mk.toUpperCase() + '</div>'; }
+      h += '<div class="quest"><div class="qi">📅</div><div><div class="qt tnum">' + WD[x.date.getDay()] + ', ' + ddmm(x.date) + '</div>'
+        + '<div class="qs">' + esc(x.ex) + '</div></div><div class="qr tnum">' + x.w + ' кг</div></div>';
+    });
+    h += '<div class="hint">Это ориентир по прогрессивной перегрузке. Если на тренировке вес дался тяжело (RPE ≥ 9.5) — приложение само сдвинет прибавку.</div>';
+  }
+  $('#screen-gym').innerHTML = h;
+}
+renderGym.seg = 'today';
+function segBtn(id, cur2, label) { return '<button class="' + (cur2 === id ? 'on' : '') + '" onclick="VF.gymSeg(\'' + id + '\')">' + label + '</button>'; }
+
+function renderFood() {
+  refreshDailyQuests();
+  var tg2 = targets(), eaten = eatenToday();
+  var kpct = eaten.kcal / tg2.kcal * 100;
+  var meals = S.meals[dayKey()] || [];
+  var h = '<div class="scr-head"><div><div class="eyebrow">Питание</div><h1>Рацион</h1></div>'
+    + '<div class="streak" style="background:var(--accent-tint);border-color:var(--accent-line);color:var(--accent)">🥗 <span class="tnum">' + S.nutStreak.count + '</span> дн.</div></div>';
+  h += '<div class="card" style="text-align:center;padding-top:var(--sp-6)">' + ring(kpct, fmt(eaten.kcal), 'из ' + fmt(tg2.kcal) + ' ккал', 184);
+  h += '<div class="macro-legend"><div class="m"><div class="ml"><span class="dot" style="background:#5EE6EA"></span>Белок</div><div class="mv tnum">' + Math.round(eaten.protein) + '/' + tg2.protein + 'г</div></div>'
+    + '<div class="m"><div class="ml"><span class="dot" style="background:#46D6A0"></span>Углеводы</div><div class="mv tnum">' + Math.round(eaten.carbs) + '/' + tg2.carbs + 'г</div></div>'
+    + '<div class="m"><div class="ml"><span class="dot" style="background:#F4B740"></span>Жиры</div><div class="mv tnum">' + Math.round(eaten.fat) + '/' + tg2.fat + 'г</div></div></div>';
+  h += '<div style="color:var(--text-muted);font-size:var(--fs-sm);margin-top:14px">Осталось <b class="tnum" style="color:var(--accent)">' + fmt(Math.max(0, tg2.kcal - eaten.kcal)) + '</b> ккал · <b class="tnum">' + Math.max(0, tg2.protein - Math.round(eaten.protein)) + '</b>г белка</div>';
+  h += '</div>';
+  h += '<button class="pill" onclick="VF.genDish()">🍽️ Сгенерируй блюдо на сегодня</button>';
+  h += '<div id="dishSlot"></div>';
+  h += '<div class="section-title">Съедено сегодня</div>';
+  if (!meals.length) h += '<div class="empty">Пока ничего. Сгенерируй блюдо или добавь приём пищи.</div>';
+  meals.forEach(function (m, i) {
+    h += '<div class="quest"><div class="qi">' + (m.emoji || '🍽️') + '</div><div><div class="qt">' + esc(m.name) + '</div>'
+      + '<div class="qs tnum">' + m.kcal + ' ккал · Б' + m.p + ' Ж' + m.f + ' У' + m.c + '</div></div>'
+      + '<div class="qr" style="background:none;border:none;color:var(--text-faint);cursor:pointer" onclick="VF.delMeal(' + i + ')">✕</div></div>';
+  });
+  $('#screen-food').innerHTML = h;
+}
+
+function renderQuests() {
+  ensureQuests(); refreshDailyQuests();
+  var h = '<div class="scr-head"><div><div class="eyebrow">Сезон 1</div><h1>Квесты</h1></div></div>';
+  h += '<div class="coach"><span class="ci">🏔️</span><div><b style="color:var(--text-hi)">Стать сильнейшим</b><br>Кампания: качай лифты, держи стрик, эволюционируй персонажа от Сухарика до Легенды.</div></div>';
+  h += '<div class="section-title">Дейлики сегодня</div>';
+  S.quests.daily.forEach(function (q) {
+    h += '<div class="quest ' + (q.done ? 'done' : '') + '"><div class="qi">' + (q.done ? '✓' : q.icon) + '</div><div><div class="qt">' + esc(q.t) + '</div></div><div class="qr">+' + q.xp + '</div></div>';
+  });
+  h += '<div class="section-title">Недельные</div>';
+  S.quests.weekly.forEach(function (q) {
+    var prog = q.id === 'w_sessions' ? weeklySessions() : q.prog;
+    h += '<div class="quest"><div class="qi">' + q.icon + '</div><div><div class="qt">' + esc(q.t) + '</div>'
+      + '<div class="track" style="margin-top:8px;height:8px"><div class="fill" style="width:' + clamp(prog / q.goal * 100, 0, 100) + '%"></div></div></div>'
+      + '<div class="qr tnum">' + Math.min(prog, q.goal) + '/' + q.goal + '</div></div>';
+  });
+  $('#screen-quests').innerHTML = h;
+}
+
+function renderHero() {
+  var li = levelInfo(S.xp), st = computeStage(), sd = stageData(), p = S.profile;
+  var sx = stageAxes();
+  var si = strengthIndex();
+  var h = '<div class="scr-head"><div><div class="eyebrow">Герой</div><h1>' + esc(p.name) + '</h1></div>'
+    + '<div class="level-disc"><b class="tnum">' + li.level + '</b></div></div>';
+  h += '<div class="hero" style="margin-top:48px"><div class="hero-card"><div class="avatar" id="avatarH"></div>'
+    + '<div class="stage-tag">Стадия ' + st + '/6</div>'
+    + '<div class="hero-name">' + esc(sd.title) + '</div><div class="hero-sub">' + esc(sd.description.split('.')[0]) + '.</div></div></div>';
+  h += '<div class="section-title">Эволюция — до стадии ' + sx.nextStage + '</div><div class="card"><div class="evo">';
+  sx.axes.forEach(function (a) {
+    var pct = a.bf ? clamp((1 - clamp((a.bfVal - a.bfMax) / 10, 0, 1)) * 100, 0, 100) : clamp(a.val / a.goal * 100, 0, 100);
+    var ok = pct >= 99;
+    var valTxt = a.bf ? (a.bfVal + '% / цель ≤' + a.bfMax + '%') : (a.name === 'Объём' ? Math.round(a.val) + '/' + a.goal : a.val.toFixed(1) + '/' + a.goal.toFixed(1));
+    h += '<div class="e"><div class="eh"><span class="en">' + a.name + '</span><span class="ev tnum">' + valTxt + (ok ? ' ✓' : '') + '</span></div>'
+      + '<div class="et"><div class="ef ' + (ok ? 'ok' : '') + '" style="width:' + pct + '%"></div></div></div>';
+  });
+  h += '</div></div>';
+  h += '<div class="section-title">Характеристики</div><div class="row2">';
+  h += '<div class="tile"><div class="lbl">Сила (индекс)</div><div class="val accent tnum">' + si.toFixed(2) + '</div></div>';
+  h += '<div class="tile"><div class="lbl">Уровень</div><div class="val tnum">' + li.level + '</div></div>';
+  h += '<div class="tile"><div class="lbl">Тренировок</div><div class="val tnum">' + S.sessions.length + '</div></div>';
+  h += '<div class="tile"><div class="lbl">Золото</div><div class="val tnum">' + S.gold + '</div></div>';
+  h += '</div>';
+  h += '<div class="section-title">Тело и анализы</div><div class="card">';
+  h += '<div class="krow"><span class="k">Вес</span><span class="v tnum">' + p.weight + ' кг</span></div>';
+  h += '<div class="krow"><span class="k">% жира</span><span class="v tnum">' + (p.bodyFat != null ? p.bodyFat + '%' : '—') + '</span></div>';
+  h += '<button class="pill ghost sm" style="margin-top:12px" onclick="VF.editBody()">Обновить замеры</button>';
+  if (S.program.bodyLink) h += '<button class="pill ghost sm" style="margin-top:8px" onclick="VF.openLink()">Открыть отчёт по составу тела</button>';
+  h += '<button class="pill ghost sm" style="margin-top:8px" onclick="VF.uploadDoc()">📎 Загрузить анализ / документ (' + S.docs.length + ')</button>';
+  h += '<div class="hint">ИИ-анализ документов и автоимпорт замеров — следующий этап (с бэкендом). Сейчас данные хранятся локально на устройстве.</div>';
+  h += '</div>';
+  h += '<button class="pill ghost sm" style="margin-top:8px" onclick="VF.editProfile()">⚙️ Профиль и цель</button>';
+  h += '<button class="pill ghost sm" style="margin:8px 0 30px;color:var(--danger)" onclick="VF.reset()">Сбросить данные</button>';
+  $('#screen-hero').innerHTML = h;
+  if (window.mountAvatar) window.mountAvatar($('#avatarH'), avatarParams());
+}
+
+// ============================================================
+//  Interactions
+// ============================================================
+var draft = null;
+var sessionBuf = [];
+function _openLogger(exId) {
+  var o = exById(exId); if (!o) return; var e = o.ex;
+  if (!draft || draft.exId !== exId) draft = { exId: exId, w: e.weight, reps: e.range ? e.range[1] : e.reps, rpe: 8, sets: [] };
+  var h = '<div class="grab"></div><h3>' + esc(e.name) + '</h3>';
+  h += '<div class="setdots" id="setdots"></div>';
+  h += '<div style="display:flex;gap:12px;margin:18px 0 8px"><div style="flex:1"><div class="lbl" style="color:var(--text-muted);font-size:var(--fs-label);text-transform:uppercase;letter-spacing:var(--tracking-label);font-weight:700;margin-bottom:6px">Вес</div>'
+    + stepperHtml('w', draft.w, e.inc || 2.5) + '</div>'
+    + '<div style="flex:1"><div class="lbl" style="color:var(--text-muted);font-size:var(--fs-label);text-transform:uppercase;letter-spacing:var(--tracking-label);font-weight:700;margin-bottom:6px">Повторы</div>'
+    + stepperHtml('reps', draft.reps, 1) + '</div></div>';
+  h += '<div class="lbl" style="color:var(--text-muted);font-size:var(--fs-label);text-transform:uppercase;letter-spacing:var(--tracking-label);font-weight:700;margin:14px 0 8px">RPE (тяжесть)</div><div class="rpe" id="rpe"></div>';
+  h += '<div class="coach" style="margin-top:14px"><span class="ci">⚡</span><div>За этот подход: <b style="color:var(--accent)" id="xpprev" class="tnum">+0 XP</b></div></div>';
+  h += '<button class="pill" style="margin-top:16px" onclick="VF.logSet()">Записать подход</button>';
+  h += '<button class="pill ghost sm" style="margin-top:8px" onclick="VF.closeModal()">Готово</button>';
+  openModal(h);
+  drawLogger();
+}
+function openLogger(id) { if (draft && draft.sets.length && draft.exId !== id) { sessionBuf = sessionBuf.concat(draft.sets); draft = null; } _openLogger(id); }
+function stepperHtml(field, val, step) {
+  return '<div class="stepper"><button onclick="VF.step(\'' + field + '\',-' + step + ')">−</button>'
+    + '<div class="sv tnum" id="sv_' + field + '">' + val + '</div>'
+    + '<button onclick="VF.step(\'' + field + '\',' + step + ')">+</button></div>';
+}
+function drawLogger() {
+  var o = exById(draft.exId), e = o.ex;
+  var dd = $('#setdots'); if (dd) { var s = ''; for (var i = 0; i < e.sets; i++) { var done = draft.sets[i]; s += '<div class="setdot ' + (done ? 'done' : '') + '">' + (done ? done.reps : (i + 1)) + '</div>'; } dd.innerHTML = s; }
+  var rp = $('#rpe'); if (rp) { var r = ''; [6, 7, 8, 9, 10].forEach(function (v) { r += '<button class="' + (draft.rpe === v ? 'on' : '') + '" onclick="VF.setRpe(' + v + ')">' + v + '</button>'; }); rp.innerHTML = r; }
+  var xp = setXpPreview(); var xe = $('#xpprev'); if (xe) xe.textContent = '+' + xp + ' XP';
+  var sv = $('#sv_w'); if (sv) sv.textContent = draft.w;
+  sv = $('#sv_reps'); if (sv) sv.textContent = draft.reps;
+}
+function setXpPreview() {
+  var o = exById(draft.exId), e = o.ex;
+  var best = bestOf(e.id, workingE1RM(e));
+  var cur = e1rm(draft.w, draft.reps);
+  var base = 12;
+  var intensity = clamp(cur / Math.max(best, 1), 0.6, 1.15);
+  var xp = Math.round(base * intensity * (draft.rpe >= 8 ? 1.15 : 1));
+  if (cur > best) xp = Math.round(xp * 1.6) + 60;
+  return xp;
+}
+function logSet() {
+  var o = exById(draft.exId), e = o.ex;
+  var cur = e1rm(draft.w, draft.reps), best = bestOf(e.id, workingE1RM(e));
+  var isPr = cur > best;
+  var xp = setXpPreview();
+  draft.sets.push({ exId: e.id, weight: draft.w, reps: draft.reps, rpe: draft.rpe, pr: isPr, xp: xp });
+  if (isPr) { S.bestE1RM[e.id] = cur; e.weight = Math.max(e.weight, draft.w); toast('🏆 Новый PR! ' + e.name, 'win'); burst(); haptic('medium'); }
+  addXp(xp);
+  haptic('light');
+  save(); drawLogger();
+}
+function finishWorkout(dayId) {
+  var buf = sessionBuf.slice();
+  if (draft && draft.sets.length) buf = buf.concat(draft.sets);
+  if (!buf.length) { toast('Запиши хотя бы один подход'); return; }
+  var sessXp = buf.reduce(function (a, s) { return a + (s.xp || 0); }, 0);
+  var bonus = 40 + (dayId === recommendDay().day.id ? 30 : 0);
+  addXp(bonus);
+  S.sessions.push({ date: dayKey(), dayId: dayId, sets: buf, xp: sessXp + bonus });
+  touchStreak();
+  var dq = null; S.quests.daily.forEach(function (q) { if (q.id === 'd_workout') dq = q; }); if (dq) dq.done = true;
+  var loot = lootRoll();
+  S.gold += loot.gold;
+  draft = null; sessionBuf = [];
+  save();
+  closeModal();
+  toast('✅ +' + fmt(sessXp + bonus) + ' XP · ' + loot.txt, 'win');
+  burst();
+  go('home');
+}
+function lootRoll() {
+  var r = Math.random();
+  if (r < 0.6) return { gold: 20, txt: '+20 золота' };
+  if (r < 0.85) return { gold: 50, txt: '🎁 +50 золота' };
+  if (r < 0.97) return { gold: 0, txt: '💎 жетон двойного XP' };
+  return { gold: 200, txt: '🏆 эпик-дроп: +200 золота!' };
+}
+
+var lastDish = null;
+function genDish() {
+  var slot = slotByHour();
+  var d = generateMeal(slot);
+  lastDish = d;
+  var r = d.r;
+  var h = '<div class="recipe" style="margin-top:14px"><div class="rh"><div class="remoji">' + (r.emoji || '🍽️') + '</div>'
+    + '<div><div class="rname">' + esc(r.name) + '</div><div class="rmeta">' + SLOT_RU[slot] + ' · ' + r.timeMin + ' мин · порция ×' + d.scale.toFixed(1) + '</div></div></div>';
+  h += '<div class="rmac"><div class="mc"><b class="tnum">' + d.kcal + '</b><span>ккал</span></div><div class="mc"><b class="tnum">' + d.p + '</b><span>белок</span></div>'
+    + '<div class="mc"><b class="tnum">' + d.f + '</b><span>жиры</span></div><div class="mc"><b class="tnum">' + d.c + '</b><span>углев</span></div></div>';
+  h += '<div style="color:var(--text-muted);font-size:var(--fs-label);text-transform:uppercase;letter-spacing:var(--tracking-label);font-weight:700;margin-bottom:4px">Ингредиенты</div><ul>';
+  d.ingredients.forEach(function (i) { h += '<li>' + esc(i.item) + ' — <b class="tnum" style="color:var(--text-hi)">' + i.grams + ' г</b></li>'; });
+  h += '</ul><div style="color:var(--text-muted);font-size:var(--fs-label);text-transform:uppercase;letter-spacing:var(--tracking-label);font-weight:700;margin:8px 0 4px">Рецепт</div><ol>';
+  r.steps.forEach(function (s) { h += '<li>' + esc(s) + '</li>'; });
+  h += '</ol><div style="display:flex;gap:10px;margin-top:14px"><button class="pill sm" onclick="VF.addDish()">Добавить в день</button><button class="pill sm ghost" onclick="VF.genDish()">Другое блюдо</button></div></div>';
+  $('#dishSlot').innerHTML = h;
+  var ds = $('#dishSlot'); if (ds) ds.scrollIntoView({ block: 'start' });
+  haptic('light');
+}
+function addDish() {
+  if (!lastDish) return;
+  var k = dayKey();
+  if (!S.meals[k]) S.meals[k] = [];
+  S.meals[k].push({ name: lastDish.r.name, emoji: lastDish.r.emoji, kcal: lastDish.kcal, p: lastDish.p, f: lastDish.f, c: lastDish.c, slot: lastDish.slot });
+  if (!S.usedRecipes[k]) S.usedRecipes[k] = [];
+  S.usedRecipes[k].push(lastDish.r.name);
+  addXp(20, true);
+  var eaten = eatenToday(), tg2 = targets();
+  if (eaten.protein >= tg2.protein * 0.95) touchNutStreak();
+  $('#dishSlot').innerHTML = '';
+  save(); renderFood();
+  toast('Добавлено · +20 XP', 'win');
+}
+function delMeal(i) { var k = dayKey(); if (S.meals[k]) { S.meals[k].splice(i, 1); save(); renderFood(); } }
+
+// ---------- Onboarding ----------
+var onbStep = 0, onbData = null;
+function startOnboarding() { onbData = JSON.parse(JSON.stringify(S.profile)); onbStep = 0; $('#onboarding').classList.add('show'); drawOnb(); }
+function drawOnb() {
+  var d = onbData, total = 5;
+  var dots = '<div class="dots">'; for (var i = 0; i < total; i++) dots += '<i class="' + (i <= onbStep ? 'on' : '') + '"></i>'; dots += '</div>';
+  var h = '<div class="brand"><div class="logo">VITA<b>FORGE</b></div><div class="tag">Прокачай реальное тело как персонажа</div></div>' + dots;
+  if (onbStep === 0) {
+    h += '<div class="step-h">Кто ты?</div><div class="step-sub">Нужно для расчёта калорий и силового индекса.</div>';
+    h += '<div class="field"><label>Имя героя</label><input id="f_name" value="' + esc(d.name) + '"></div>';
+    h += '<div class="opts g2"><button class="opt ' + (d.sex === 'm' ? 'on' : '') + '" onclick="VF.onbSet(\'sex\',\'m\')"><b>Мужчина</b></button>'
+      + '<button class="opt ' + (d.sex === 'f' ? 'on' : '') + '" onclick="VF.onbSet(\'sex\',\'f\')"><b>Женщина</b></button></div>';
+    h += '<div class="field-row"><div class="field"><label>Возраст</label><input id="f_age" type="number" inputmode="numeric" value="' + d.age + '"></div>'
+      + '<div class="field"><label>Рост, см</label><input id="f_height" type="number" inputmode="numeric" value="' + d.height + '"></div></div>';
+  } else if (onbStep === 1) {
+    h += '<div class="step-h">Текущий вес</div><div class="step-sub">Вес нужен для расчёта — скучных графиков-весов не будет. Жир — опционально.</div>';
+    h += '<div class="field-row"><div class="field"><label>Вес, кг</label><input id="f_weight" type="number" inputmode="decimal" value="' + d.weight + '"></div>'
+      + '<div class="field"><label>% жира (если знаешь)</label><input id="f_bf" type="number" inputmode="decimal" value="' + (d.bodyFat != null ? d.bodyFat : '') + '"></div></div>';
+    h += '<div class="hint">Из твоего замера youjiu позже подтянем точные цифры. Сейчас введи примерно или пропусти жир.</div>';
+  } else if (onbStep === 2) {
+    h += '<div class="step-h">Цель</div><div class="step-sub">От неё зависит калораж и приоритет.</div>';
+    h += '<div class="opts">'
+      + onbOpt('goal', 'cut', '🔥 Сушка', 'Снизить жир, сохранить мышцы (дефицит ~20%)')
+      + onbOpt('goal', 'recomp', '⚖️ Рекомпозиция', 'Поддержание: сила вверх, состав тела лучше')
+      + onbOpt('goal', 'bulk', '📈 Масса', 'Набор мышц (профицит ~10%)') + '</div>';
+  } else if (onbStep === 3) {
+    h += '<div class="step-h">Частота тренировок</div><div class="step-sub">Сколько раз в неделю планируешь зал?</div>';
+    h += '<div class="opts g2">';
+    [2, 3, 4, 5].forEach(function (n) { h += '<button class="opt ' + (d.days === n ? 'on' : '') + '" onclick="VF.onbSet(\'days\',' + n + ')"><b>' + n + ' раза</b></button>'; });
+    h += '</div>';
+  } else if (onbStep === 4) {
+    h += '<div class="step-h">Питание</div><div class="step-sub">Ограничения для генератора блюд.</div>';
+    h += '<div class="opts">'
+      + onbOpt('diet', 'all', '🍗 Без ограничений', 'Ем всё')
+      + onbOpt('diet', 'nodairy', '🥛 Без молочки', 'Исключить молоко, творог, сыр')
+      + onbOpt('diet', 'veg', '🥦 Вегетарианство', 'Без мяса и рыбы')
+      + onbOpt('diet', 'nogluten', '🌾 Без глютена', 'Исключить пшеницу, овёс, пасту') + '</div>';
+  }
+  h += '<div style="flex:1"></div>';
+  h += '<button class="pill" onclick="VF.onbNext()">' + (onbStep < total - 1 ? 'Дальше' : 'Поехали 🚀') + '</button>';
+  if (onbStep > 0) h += '<button class="pill ghost sm" style="margin-top:8px" onclick="VF.onbBack()">Назад</button>';
+  $('#onboarding').innerHTML = h;
+}
+function onbOpt(field, val, title, sub) { return '<button class="opt ' + (onbData[field] === val ? 'on' : '') + '" onclick="VF.onbSet(\'' + field + '\',\'' + val + '\')"><b>' + title + '</b><span>' + sub + '</span></button>'; }
+function onbCommitInputs() {
+  var g = function (id) { var el = $('#' + id); return el ? el.value : null; };
+  if (onbStep === 0) { onbData.name = g('f_name') || 'Атлет'; onbData.age = +g('f_age') || 28; onbData.height = +g('f_height') || 178; }
+  if (onbStep === 1) { onbData.weight = +g('f_weight') || 75; var bf = g('f_bf'); onbData.bodyFat = bf ? +bf : null; }
+}
+function onbSet(f, v) { onbCommitInputs(); onbData[f] = v; drawOnb(); }
+function onbNext() {
+  onbCommitInputs();
+  if (onbStep < 4) { onbStep++; drawOnb(); return; }
+  S.profile = onbData; S.onboarded = true;
+  allEx().forEach(function (o) { S.bestE1RM[o.ex.id] = workingE1RM(o.ex); });
+  S.program.bodyweight = S.profile.weight;
+  save();
+  $('#onboarding').classList.remove('show');
+  go('home');
+  toast('Добро пожаловать, ' + esc(S.profile.name) + '! 💪', 'win');
+}
+function onbBack() { onbCommitInputs(); if (onbStep > 0) { onbStep--; drawOnb(); } }
+
+// ---------- Profile / body edit ----------
+function editProfile() {
+  var p = S.profile;
+  var h = '<div class="grab"></div><h3>Профиль и цель</h3>';
+  h += '<div class="field"><label>Имя</label><input id="e_name" value="' + esc(p.name) + '"></div>';
+  h += '<div class="field-row"><div class="field"><label>Вес, кг</label><input id="e_weight" type="number" value="' + p.weight + '"></div>'
+    + '<div class="field"><label>Дней/нед</label><input id="e_days" type="number" value="' + p.days + '"></div></div>';
+  h += '<div class="field"><label>Цель</label><select id="e_goal"><option value="cut"' + (p.goal === 'cut' ? ' selected' : '') + '>Сушка</option><option value="recomp"' + (p.goal === 'recomp' ? ' selected' : '') + '>Рекомпозиция</option><option value="bulk"' + (p.goal === 'bulk' ? ' selected' : '') + '>Масса</option></select></div>';
+  h += '<div class="field"><label>Питание</label><select id="e_diet"><option value="all"' + (p.diet === 'all' ? ' selected' : '') + '>Без ограничений</option><option value="nodairy"' + (p.diet === 'nodairy' ? ' selected' : '') + '>Без молочки</option><option value="veg"' + (p.diet === 'veg' ? ' selected' : '') + '>Вегетарианство</option><option value="nogluten"' + (p.diet === 'nogluten' ? ' selected' : '') + '>Без глютена</option></select></div>';
+  h += '<button class="pill" style="margin-top:8px" onclick="VF.saveProfile()">Сохранить</button>';
+  openModal(h);
+}
+function saveProfile() {
+  S.profile.name = $('#e_name').value || S.profile.name;
+  S.profile.weight = +$('#e_weight').value || S.profile.weight;
+  S.profile.days = +$('#e_days').value || S.profile.days;
+  S.profile.goal = $('#e_goal').value;
+  S.profile.diet = $('#e_diet').value;
+  save(); closeModal(); renderCur(); toast('Сохранено');
+}
+function editBody() {
+  var p = S.profile;
+  var h = '<div class="grab"></div><h3>Замеры тела</h3>';
+  h += '<div class="field-row"><div class="field"><label>Вес, кг</label><input id="b_w" type="number" value="' + p.weight + '"></div>'
+    + '<div class="field"><label>% жира</label><input id="b_bf" type="number" value="' + (p.bodyFat != null ? p.bodyFat : '') + '"></div></div>';
+  h += '<button class="pill" onclick="VF.saveBody()">Сохранить замер</button>';
+  h += '<div class="hint">Замеры влияют на стадию персонажа (ось «Сушка») и не рисуют скучных графиков — только эволюцию аватара.</div>';
+  openModal(h);
+}
+function saveBody() {
+  S.profile.weight = +$('#b_w').value || S.profile.weight;
+  var bf = $('#b_bf').value; S.profile.bodyFat = bf ? +bf : null;
+  S.bodyLog.push({ date: dayKey(), weight: S.profile.weight, bodyFat: S.profile.bodyFat });
+  save(); closeModal(); renderCur(); toast('Замер сохранён');
+}
+function uploadDoc() {
+  var inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*,application/pdf';
+  inp.onchange = function () { if (inp.files[0]) { S.docs.push({ name: inp.files[0].name, date: dayKey() }); save(); renderHero(); toast('📎 ' + inp.files[0].name + ' добавлен'); } };
+  inp.click();
+}
+function openLink() { try { if (tg && tg.openLink) tg.openLink(S.program.bodyLink); else window.open(S.program.bodyLink, '_blank'); } catch (e) { window.open(S.program.bodyLink, '_blank'); } }
+function reset() { if (confirm('Сбросить все данные VITAFORGE?')) { localStorage.removeItem(KEY); location.reload(); } }
+
+// ---------- Modal / toast / fx ----------
+function openModal(html) { $('#modal').innerHTML = html; $('#modalWrap').classList.add('open'); }
+function closeModal() { $('#modalWrap').classList.remove('open'); }
+var toastT = null;
+function toast(msg, cls) { var t = $('#toast'); t.textContent = msg; t.className = 'toast show ' + (cls || ''); clearTimeout(toastT); toastT = setTimeout(function () { t.className = 'toast'; }, 2600); }
+function burst() {
+  var fx = $('#fx'); var cx = window.innerWidth / 2, cy = window.innerHeight * 0.32;
+  for (var i = 0; i < 14; i++) {
+    var s = document.createElement('div'); s.className = 'spark';
+    var ang = Math.random() * Math.PI * 2, dist = 60 + Math.random() * 120;
+    s.style.left = cx + 'px'; s.style.top = cy + 'px';
+    s.style.background = Math.random() > 0.5 ? '#FFC53D' : '#3FD3D8';
+    fx.appendChild(s);
+    (function (el, x, y) {
+      el.animate([{ transform: 'translate(0,0) scale(1)', opacity: 1 }, { transform: 'translate(' + x + 'px,' + y + 'px) scale(0)', opacity: 0 }], { duration: 620, easing: 'cubic-bezier(.22,1,.36,1)' }).onfinish = function () { el.remove(); };
+    })(s, Math.cos(ang) * dist, Math.sin(ang) * dist);
+  }
+}
+
+// ---------- Router ----------
+var cur = 'home';
+function go(tab) {
+  cur = tab;
+  $all('.screen').forEach(function (s) { s.classList.remove('active'); });
+  $('#screen-' + tab).classList.add('active');
+  $all('.tab').forEach(function (t) { t.classList.toggle('active', t.getAttribute('data-tab') === tab); });
+  renderCur();
+  window.scrollTo(0, 0);
+  haptic('light');
+}
+function renderCur() {
+  if (cur === 'home') renderHome();
+  else if (cur === 'gym') renderGym();
+  else if (cur === 'food') renderFood();
+  else if (cur === 'quests') renderQuests();
+  else if (cur === 'hero') renderHero();
+}
+function gymSeg(id) { renderGym.seg = id; renderGym(); }
+
+// ---------- Public API ----------
+window.VF = {
+  go: go, gymSeg: gymSeg, openLogger: openLogger, closeModal: closeModal,
+  step: function (f, d) { draft[f] = Math.max(f === 'reps' ? 1 : 0, (draft[f] || 0) + d); draft[f] = Math.round(draft[f] * 10) / 10; drawLogger(); },
+  setRpe: function (v) { draft.rpe = v; drawLogger(); },
+  logSet: logSet, finishWorkout: finishWorkout,
+  genDish: genDish, addDish: addDish, delMeal: delMeal,
+  onbSet: onbSet, onbNext: onbNext, onbBack: onbBack,
+  editProfile: editProfile, saveProfile: saveProfile, editBody: editBody, saveBody: saveBody,
+  uploadDoc: uploadDoc, openLink: openLink, reset: reset,
+  muscleMenu: muscleMenu, muscleExercises: muscleExercises, muscleInjury: muscleInjury,
+  clearMuscle: function () { renderGym.muscle = null; renderGym(); }
+};
+
+// ---------- Boot ----------
+load();
+$all('.tab').forEach(function (t) { t.addEventListener('click', function () { renderGym.muscle = null; go(t.getAttribute('data-tab')); }); });
+$('#modalBg').addEventListener('click', closeModal);
+if (!S.onboarded) startOnboarding();
+else go('home');
+
+})();

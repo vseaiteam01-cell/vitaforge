@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>VITAFORGE</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tokens.css?v=24">
+  <link rel="stylesheet" href="styles.css?v=24">
+  <script type="importmap">{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}</script>
+</head>
+<body>
+  <!-- Онбординг (показывается при первом запуске) -->
+  <div id="onboarding" class="onb"></div>
+
+  <!-- Экраны -->
+  <main id="screen-home"   class="screen active"></main>
+  <main id="screen-gym"    class="screen"></main>
+  <main id="screen-food"   class="screen"></main>
+  <main id="screen-quests" class="screen"></main>
+  <main id="screen-hero"   class="screen"></main>
+
+  <!-- Плавающий таб-бар -->
+  <nav class="tabbar" id="tabbar">
+    <button class="tab active" data-tab="home"><span class="ic">🏠</span><span class="tl">Дом</span></button>
+    <button class="tab" data-tab="gym"><span class="ic">🏋️</span><span class="tl">Зал</span></button>
+    <button class="tab" data-tab="food"><span class="ic">🍽️</span><span class="tl">Еда</span></button>
+    <button class="tab" data-tab="quests"><span class="ic">🎯</span><span class="tl">Квесты</span></button>
+    <button class="tab" data-tab="hero"><span class="ic">🦸</span><span class="tl">Герой</span></button>
+  </nav>
+
+  <!-- Модалка -->
+  <div class="modal-wrap" id="modalWrap"><div class="modal-bg" id="modalBg"></div><div class="modal" id="modal"></div></div>
+  <div class="toast" id="toast"></div>
+  <div class="fx" id="fx"></div>
+
+  <script>window.__vfAvatarQueue=[];window.mountAvatar=function(c,o){if(window.VFAvatar){window.VFAvatar.mount(c,o);}else{window.__vfAvatarQueue.push([c,o]);}};</script>
+  <script src="data.js?v=24"></script>
+  <script src="recipes.js?v=24"></script>
+  <script src="stages.js?v=24"></script>
+  <script src="app.js?v=24"></script>
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <script src="avatar3d.js?v=24"></script>
+</body>
+</html>

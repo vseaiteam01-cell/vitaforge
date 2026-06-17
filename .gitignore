@@ -1,0 +1,12 @@
+# dev artifacts
+_v1-classic/
+extract.py
+snap_server.py
+avatar_snap.jpg
+*.log
+.DS_Store
+Thumbs.db
+
+# source/reference images (runtime needs only .glb)
+assets/*_src.jpg
+assets/stage*.png
