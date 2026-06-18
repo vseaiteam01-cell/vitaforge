@@ -444,6 +444,7 @@ var picker = { dayId: null, fine: 'chest', q: '', mode: 'add', swapId: null };
 var pendingAdd = null;
 function renderStackPanel() {
   var h = '<div class="coach"><span class="ci">🗂</span><div><b style="color:var(--text-hi)">Мой стек</b><br>Твоя программа на этом аккаунте. Добавляй/меняй упражнения — ИИ-ассистент подскажет про дубли и перетрен.</div></div>';
+  h += '<button class="pill ghost sm" style="margin:0 0 12px" onclick="VF.regenStack()">↻ Собрать стек из профиля (' + (S.profile.days || 3) + ' дн.)</button>';
   var ot = checkOvertraining(1);
   h += '<div class="vol-badges">' + ot.map(function (o) { return '<span class="vb ' + o.status + '">' + (MUSCLE_INFO[o.group] ? MUSCLE_INFO[o.group].name : o.group) + ' · ' + o.sets + '</span>'; }).join('') + '</div>';
   h += '<div class="hint" style="margin:2px 0 8px">Сеты/нед по группам · <b style="color:var(--accent)">норм</b> / <span style="color:var(--warn)">перебор</span> / <span style="color:var(--text-faint)">мало</span>. Ориентир, не медсовет.</div>';
@@ -518,6 +519,42 @@ function muscleMenuFine(fine) {
     + '<button class="pill" onclick="VF.muscleExFine(\'' + fine + '\')">💪 Упражнения на «' + esc(fineRu(fine)) + '»</button>'
     + '<button class="pill ghost" onclick="VF.muscleInjury(\'' + grp + '\')">🩹 Травма / восстановление</button></div>';
   openModal(h);
+}
+// ---------- Базовый стек из профиля (научный сплит) ----------
+var EQUIP_ALLOW = { gym: ['barbell', 'dumbbell', 'machine', 'cable', 'e-z curl bar', 'kettlebells', 'bands', 'body only', null], home: ['dumbbell', 'bands', 'kettlebells', 'body only', 'exercise ball', 'e-z curl bar', null], bw: ['body only', null] };
+function equipOk(eq, prof) { return (EQUIP_ALLOW[prof] || EQUIP_ALLOW.gym).indexOf(eq) >= 0; }
+function pickSlot(slot, equip, used) {
+  var g = LIB.byGroup[slot.group] || [];
+  var pool = g.filter(function (x) { return equipOk(x.equipment, equip) && (!slot.mech || x.mechanic === slot.mech) && (!slot.hint || x.muscle === slot.hint) && used.indexOf(x.id) < 0; });
+  if (!pool.length) pool = g.filter(function (x) { return equipOk(x.equipment, equip) && used.indexOf(x.id) < 0; });
+  if (!pool.length) pool = g.filter(function (x) { return used.indexOf(x.id) < 0; });
+  pool.sort(function (a, b) { return ((b.core ? 2 : 0) + (b.imgs && b.imgs.length ? 1 : 0)) - ((a.core ? 2 : 0) + (a.imgs && a.imgs.length ? 1 : 0)); });
+  return pool[0] || null;
+}
+function slotsFor(k) {
+  var P = {
+    PUSH: [{ group: 'chest', mech: 'compound', sets: 4, range: [8, 12] }, { group: 'chest', mech: 'isolation', sets: 3, range: [12, 15] }, { group: 'shoulders', mech: 'compound', sets: 4, range: [8, 12] }, { group: 'shoulders', mech: 'isolation', sets: 3, range: [12, 20] }, { group: 'arms', mech: 'isolation', sets: 3, range: [10, 15], hint: 'triceps' }],
+    PULL: [{ group: 'back', mech: 'compound', sets: 4, range: [8, 12], hint: 'lats' }, { group: 'back', mech: 'compound', sets: 4, range: [10, 12] }, { group: 'back', mech: 'isolation', sets: 3, range: [12, 15] }, { group: 'arms', mech: 'isolation', sets: 3, range: [10, 15], hint: 'biceps' }],
+    LEGS: [{ group: 'legs', mech: 'compound', sets: 4, range: [8, 12], hint: 'quads' }, { group: 'legs', mech: 'isolation', sets: 4, range: [12, 15], hint: 'hams' }, { group: 'legs', mech: 'isolation', sets: 4, range: [12, 15], hint: 'glutes' }, { group: 'legs', mech: 'isolation', sets: 4, range: [20, 30], hint: 'calves' }, { group: 'abs', mech: 'isolation', sets: 4, range: [12, 20] }],
+    UPPER: [{ group: 'chest', mech: 'compound', sets: 4, range: [8, 12] }, { group: 'back', mech: 'compound', sets: 4, range: [8, 12], hint: 'lats' }, { group: 'shoulders', mech: 'isolation', sets: 3, range: [12, 20] }, { group: 'arms', mech: 'isolation', sets: 3, range: [10, 15], hint: 'biceps' }, { group: 'arms', mech: 'isolation', sets: 3, range: [10, 15], hint: 'triceps' }],
+    LOWER: [{ group: 'legs', mech: 'compound', sets: 4, range: [8, 12], hint: 'quads' }, { group: 'legs', mech: 'isolation', sets: 4, range: [12, 15], hint: 'hams' }, { group: 'legs', mech: 'isolation', sets: 4, range: [20, 30], hint: 'calves' }, { group: 'abs', mech: 'isolation', sets: 4, range: [12, 20] }]
+  };
+  return P[k] || P.PUSH;
+}
+function generateBaseStack(profile) {
+  var n = clamp(profile.days || 3, 2, 5);
+  var TPL = { 2: [['Верх', 'UPPER'], ['Низ', 'LOWER']], 3: [['Толкающие', 'PUSH'], ['Тянущие', 'PULL'], ['Ноги', 'LEGS']], 4: [['Верх A', 'UPPER'], ['Низ A', 'LOWER'], ['Верх B', 'UPPER'], ['Низ B', 'LOWER']], 5: [['Толкающие', 'PUSH'], ['Тянущие', 'PULL'], ['Ноги', 'LEGS'], ['Верх', 'UPPER'], ['Низ', 'LOWER']] };
+  var WD = { 2: [1, 4], 3: [1, 3, 5], 4: [1, 2, 4, 5], 5: [1, 2, 3, 4, 5] };
+  var tpl = TPL[n] || TPL[3], used = [], days = [], sched = {};
+  tpl.forEach(function (t, i) {
+    var exs = [];
+    slotsFor(t[1]).forEach(function (slot) {
+      var rec = pickSlot(slot, profile.equipment, used);
+      if (rec) { used.push(rec.id); var e = libEntry(rec); e.sets = slot.sets; e.range = slot.range; e.reps = slot.range[1]; e.source = 'base'; exs.push(e); }
+    });
+    var id = 'day' + (i + 1); days.push({ id: id, name: 'День ' + (i + 1) + ' — ' + t[0], exercises: exs }); sched[id] = (WD[n] || WD[3])[i];
+  });
+  return { units: 'кг', bodyweight: profile.weight, level: 'intermediate', schedule: sched, days: days };
 }
 function exForMuscle(id) { return allEx().filter(function (o) { return muscleOf(o.ex.id) === id; }); }
 function muscleMenu(id) {
@@ -1129,7 +1166,15 @@ window.VF = {
   pickSearch: function (v) { picker.q = v; var el = $('#pkList'); if (el) el.innerHTML = pickListHtml(); },
   pickAdd: function (id) { pickAdd(id); },
   confirmAddYes: function () { if (pendingAdd) { var r = pendingAdd; pendingAdd = null; doAdd(r); } },
-  openPickerBack: function () { renderPicker(); }
+  openPickerBack: function () { renderPicker(); },
+  regenStack: function () {
+    var h = '<div class="grab"></div><h3>↻ Собрать стек из профиля</h3>'
+      + '<div class="coach" style="margin-bottom:14px"><span class="ci">⚠️</span><div>Соберу свежий научный сплит из твоего профиля (цель «' + S.profile.goal + '», ' + (S.profile.days || 3) + ' дн./нед, инвентарь). История и PR сохранятся по id, но текущие упражнения, ручные добавления и замены заменятся.</div></div>'
+      + '<button class="pill" onclick="VF.regenYes()">Пересобрать</button>'
+      + '<button class="pill ghost sm" style="margin-top:8px" onclick="VF.closeModal()">Отмена</button>';
+    openModal(h);
+  },
+  regenYes: function () { if (!LIB.ready) { toast('База ещё грузится…'); return; } S.program = generateBaseStack(S.profile); enrichProgram(); save(); closeModal(); renderGym(); hapNotify('success'); toast('Стек пересобран из профиля'); }
 };
 
 // ---------- Boot ----------
