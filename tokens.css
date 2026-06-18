@@ -6,7 +6,7 @@
      ============================================================ */
 
   /* ---------- BACKGROUND (top-lit charcoal gradient) ---------- */
-  --bg-base:            #1B1E27;   /* page fallback solid */
+  --bg-base:            #0F0F10;   /* page fallback solid */
   --bg-grad-top:        #262A36;   /* lighter, "light source" top */
   --bg-grad-mid:        #1B1E27;
   --bg-grad-bottom:     #14161D;   /* deepest, sinks downward */
@@ -63,14 +63,14 @@
      -6px -6px 18px rgba(255,255,255,0.035);
 
   /* ---------- ACCENT (cyan / teal — the single hero color) ---------- */
-  --accent:             #3FD3D8;   /* primary cyan */
-  --accent-bright:      #5EE6EA;   /* gradient light stop / hover */
-  --accent-deep:        #28B6BD;   /* gradient deep stop / pressed */
+  --accent:             #54C4CE;   /* primary cyan */
+  --accent-bright:      #70F5E6;   /* gradient light stop / hover */
+  --accent-deep:        #2E9AA2;   /* gradient deep stop / pressed */
   --accent-ink:         #06262B;   /* text on cyan pill */
-  --accent-grad:        linear-gradient(135deg, #5EE6EA 0%, #3FD3D8 48%, #28B6BD 100%);
-  --accent-grad-soft:   linear-gradient(135deg, rgba(94,230,234,0.16), rgba(40,182,189,0.10));
-  --accent-tint:        rgba(63, 211, 216, 0.12);   /* faint fill behind accents */
-  --accent-line:        rgba(63, 211, 216, 0.45);   /* hairline / focus ring */
+  --accent-grad:        linear-gradient(135deg, #70F5E6 0%, #54C4CE 48%, #2E9AA2 100%);
+  --accent-grad-soft:   linear-gradient(135deg, rgba(112,245,230,0.16), rgba(46,154,162,0.10));
+  --accent-tint:        rgba(84,196,206, 0.12);   /* faint fill behind accents */
+  --accent-line:        rgba(84,196,206, 0.45);   /* hairline / focus ring */
 
   /* ---------- STATUS ---------- */
   --success:            #46D6A0;
@@ -144,11 +144,11 @@
   --num-feat:   "tnum" 1, "lnum" 1;  /* tabular-nums, no dotted zero */
 
   /* ---------- GLOW ---------- */
-  --glow-cyan:       0 0 28px rgba(63, 211, 216, 0.45);
-  --glow-cyan-sm:    0 0 14px rgba(63, 211, 216, 0.35);
-  --glow-cyan-strong:0 0 44px rgba(63, 211, 216, 0.6), 0 8px 24px rgba(40,182,189,0.4);
-  --glow-pill:       0 10px 26px rgba(40, 182, 189, 0.42), 0 0 18px rgba(94,230,234,0.30);
-  --glow-ambient:    0 0 60px rgba(63, 211, 216, 0.10);  /* faint card aura */
+  --glow-cyan:       0 0 28px rgba(84,196,206, 0.45);
+  --glow-cyan-sm:    0 0 14px rgba(84,196,206, 0.35);
+  --glow-cyan-strong:0 0 44px rgba(84,196,206, 0.6), 0 8px 24px rgba(46,154,162,0.4);
+  --glow-pill:       0 10px 26px rgba(46,154,162, 0.42), 0 0 18px rgba(112,245,230,0.30);
+  --glow-ambient:    0 0 60px rgba(84,196,206, 0.10);  /* faint card aura */
   --glow-star:       0 0 10px rgba(255, 197, 61, 0.5);
   --glow-success:    0 0 16px rgba(70, 214, 160, 0.45);
 

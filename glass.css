@@ -22,7 +22,7 @@
   --glass-spec: inset 0 1px 0 var(--glass-edge-hi),
                 inset 0 -1px 0 rgba(255,255,255,0.04),
                 inset 0 0 0 0.5px var(--glass-edge);
-  --glass-spec-accent: inset 0 1px 0 rgba(94,230,234,0.40),
+  --glass-spec-accent: inset 0 1px 0 rgba(112,245,230,0.40),
                        inset 0 0 0 0.5px var(--accent-line);
 
   --glass-lift:    0 8px 32px rgba(0,0,0,0.32), 0 2px 8px rgba(0,0,0,0.24);
@@ -30,7 +30,7 @@
   --glass-lift-sm: 0 4px 18px rgba(0,0,0,0.28);
 
   /* ---------- accent glows + gold (Hevy PR) ---------- */
-  --glow-edge-cyan:  0 0 0 1px var(--accent-line), 0 0 22px rgba(63,211,216,0.30);
+  --glow-edge-cyan:  0 0 0 1px var(--accent-line), 0 0 22px rgba(84,196,206,0.30);
   --glow-pr-gold:    0 0 0 1px rgba(255,197,61,0.55), 0 0 26px rgba(255,197,61,0.42);
   --gold:            #F5B83D;
   --gold-ink:        #2A1E00;
@@ -48,9 +48,9 @@
 body {
   background-color: var(--bg-base);
   background-image:
-    radial-gradient(46% 38% at 18% 8%,  rgba(63,211,216,0.16), transparent 60%),
+    radial-gradient(46% 38% at 18% 8%,  rgba(84,196,206,0.16), transparent 60%),
     radial-gradient(54% 44% at 88% 22%, rgba(40,90,140,0.18),  transparent 62%),
-    radial-gradient(60% 50% at 50% 108%, rgba(94,230,234,0.07), transparent 64%),
+    radial-gradient(60% 50% at 50% 108%, rgba(112,245,230,0.07), transparent 64%),
     var(--bg-gradient);
   background-attachment: fixed;
   background-repeat: no-repeat;
@@ -58,7 +58,7 @@ body {
 body::before {
   content: ""; position: fixed; inset: -20%; z-index: -1; pointer-events: none;
   background:
-    radial-gradient(38% 30% at 30% 20%, rgba(63,211,216,0.10), transparent 60%),
+    radial-gradient(38% 30% at 30% 20%, rgba(84,196,206,0.10), transparent 60%),
     radial-gradient(40% 32% at 72% 70%, rgba(40,120,150,0.12), transparent 62%);
   animation: bg-drift var(--dur-drift) var(--ease-in-out) infinite alternate;
 }
@@ -102,7 +102,7 @@ body::before {
 .tab { position: relative; z-index: 1; }
 .tab .ic { filter: none !important; display: grid; place-items: center; height: 24px; }
 .tab .ic svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform var(--dur-press); }
-.tab.active .ic svg { stroke: var(--accent); filter: drop-shadow(0 0 6px rgba(63,211,216,.55)); }
+.tab.active .ic svg { stroke: var(--accent); filter: drop-shadow(0 0 6px rgba(84,196,206,.55)); }
 .tab:active .ic svg { transform: scale(.86); }
 
 /* ===== GLASS HERO (Home) with charged shimmer ===== */
@@ -126,10 +126,10 @@ body::before {
   background: conic-gradient(from -90deg, var(--accent-bright) calc(var(--p) * 1%), var(--surface-sunken) 0);
   -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - var(--tk)), #000 calc(100% - var(--tk)));
   mask: radial-gradient(farthest-side, transparent calc(100% - var(--tk)), #000 calc(100% - var(--tk)));
-  filter: drop-shadow(0 0 7px rgba(63,211,216,.35));
+  filter: drop-shadow(0 0 7px rgba(84,196,206,.35));
 }
 .gring > * { -webkit-mask: none; mask: none; }
-.gring.near { filter: drop-shadow(0 0 13px rgba(63,211,216,.6)); }
+.gring.near { filter: drop-shadow(0 0 13px rgba(84,196,206,.6)); }
 
 /* ===== GLASS BUTTONS / variants ===== */
 .pill.glass {
@@ -177,14 +177,14 @@ body::before {
 .m-base { fill: #262b36; opacity: .42; }
 .m-mus { fill: #2c333f; fill: color-mix(in srgb, var(--accent) calc(var(--rec, 0) * 1%), #2b3140);
   stroke: rgba(255,255,255,.06); stroke-width: 1; cursor: pointer; transition: fill .16s var(--ease-out), filter .2s; }
-.m-mus.charged { filter: drop-shadow(0 0 4px rgba(63,211,216,.6)); }
+.m-mus.charged { filter: drop-shadow(0 0 4px rgba(84,196,206,.6)); }
 /* наведение/выбор — ВСЯ мышца заливается голубым */
 .m-mus:hover, .m-mus.active { fill: #6FC3FF; stroke: #BFE4FF; stroke-width: 1.4; filter: drop-shadow(0 0 8px rgba(111,195,255,.9)); }
 .m-mus:active { filter: drop-shadow(0 0 10px rgba(111,195,255,.98)); }
 .mm-legend { display: flex; justify-content: center; gap: 16px; margin: 2px 0 8px; }
 .mm-legend span { display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: var(--fs-sm); }
 .mm-legend .d { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
-.mm-legend .d.charged { background: var(--accent); box-shadow: 0 0 6px rgba(63,211,216,.7); }
+.mm-legend .d.charged { background: var(--accent); box-shadow: 0 0 6px rgba(84,196,206,.7); }
 .mm-legend .d.mid { background: #3a6b73; }
 .mm-legend .d.low { background: #2c333f; }
 
@@ -266,8 +266,19 @@ body::before {
 .seg.seg-scroll::-webkit-scrollbar { display: none; }
 .seg.seg-scroll button { flex: 0 0 auto; padding: 9px 14px; white-space: nowrap; }
 .stack-ex .ex-acts { display: flex; gap: 6px; }
+.ex-go { color: var(--text-faint); font-weight: var(--fw-x); }
 .ico-btn { width: 34px; height: 34px; border-radius: 10px; border: 1px solid var(--glass-edge); background: var(--surface-2); color: var(--text-mid); font-size: 15px; display: grid; place-items: center; }
 .ico-btn:active { transform: scale(.88); background: var(--accent-tint); color: var(--accent); }
+
+/* ===== exercise detail (как делать) ===== */
+.exi-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.exi-tags span { font-family: var(--font-mono); font-size: var(--fs-label); text-transform: uppercase; letter-spacing: .04em; color: var(--text-muted); background: var(--glass-tint); border: 1px solid var(--glass-edge); border-radius: var(--r-pill); padding: 5px 11px; -webkit-backdrop-filter: var(--glass-filter); backdrop-filter: var(--glass-filter); }
+.exi-how { margin: 16px 0; }
+.exi-how-t, .exi-mus-t { font-family: var(--font-mono); font-size: var(--fs-label); text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--text-muted); font-weight: var(--fw-bold); margin-bottom: 7px; }
+.exi-how p { margin: 0; color: var(--text-mid); font-size: var(--fs-sm); line-height: 1.55; }
+.exi-mus { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 18px; }
+.exi-m { font-size: var(--fs-sm); color: var(--text-muted); background: var(--glass-tint); border: 1px solid var(--glass-edge); border-radius: var(--r-pill); padding: 6px 13px; }
+.exi-m.prim { color: var(--accent); border-color: var(--accent-line); background: var(--accent-tint); font-weight: var(--fw-semi); }
 .vol-badges { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0; }
 .vb { font-family: var(--font-mono); font-size: 11px; padding: 4px 9px; border-radius: var(--r-pill); border: 1px solid var(--glass-edge); color: var(--text-muted); }
 .vb.ok { color: var(--accent); border-color: var(--accent-line); }
@@ -362,3 +373,67 @@ body::before {
 .cal-legend { display: flex; gap: 18px; justify-content: center; margin-top: 14px; color: var(--text-muted); font-size: var(--fs-sm); }
 .cal-legend span { display: inline-flex; align-items: center; gap: 6px; }
 .cal-legend i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+/* ============================================================
+   UNIFICATION PASS (v41) — единый liquid-glass «Все ИИ».
+   Убирает неоморфизм (пухлые dual-light тени) и charcoal-фон:
+   near-black #0F0F10, плоско-стеклянные тени, frosted-карточки.
+   Грузится последним → переопределяет styles.css.
+   ============================================================ */
+:root {
+  /* near-black бренд-фон с мягкой глубиной (без charcoal) */
+  --bg-gradient: radial-gradient(120% 85% at 50% -10%, #17181C 0%, #0F0F10 54%, #0A0A0B 100%);
+  /* брендовый текст */
+  --text-hi:   #FAFAFA;
+  --text-mid:  #E4E4E7;
+  --text-muted: rgba(255,255,255,0.56);
+  --text-faint: rgba(255,255,255,0.40);
+  /* стеклянные поверхности вместо сплошного charcoal */
+  --surface-1: rgba(255,255,255,0.055);
+  --surface-2: rgba(255,255,255,0.085);
+  --surface-3: rgba(255,255,255,0.12);
+  --surface-sunken: rgba(0,0,0,0.34);
+  --border-hairline: rgba(255,255,255,0.10);
+  --border-soft: rgba(255,255,255,0.07);
+  /* плоско-стеклянные тени взамен неоморфных (без света сверху-слева) */
+  --nm-raised:    var(--glass-spec), 0 12px 32px -14px rgba(0,0,0,.7);
+  --nm-raised-sm: var(--glass-spec), 0 6px 18px -10px rgba(0,0,0,.55);
+  --nm-raised-lg: var(--glass-spec), 0 26px 62px -22px rgba(0,0,0,.72);
+  --nm-pressed:    inset 0 0 0 1px var(--accent-line), inset 0 2px 12px rgba(0,0,0,.4);
+  --nm-pressed-sm: inset 0 0 0 1px var(--glass-edge), inset 0 1px 7px rgba(0,0,0,.34);
+  --nm-well:       inset 0 1px 3px rgba(0,0,0,.55), inset 0 0 0 1px rgba(255,255,255,.04);
+  --nm-float:      var(--glass-spec), 0 20px 52px -16px rgba(0,0,0,.78);
+  --glow-ambient:  0 0 60px rgba(84,196,206,0.08);
+}
+/* крупные карточки — настоящий фрост */
+.card, .recipe, .coach { position: relative; -webkit-backdrop-filter: blur(28px) saturate(1.3); backdrop-filter: blur(28px) saturate(1.3); }
+.card, .recipe {
+  background: linear-gradient(180deg, rgba(255,255,255,.085), rgba(255,255,255,.03));
+  border: 1px solid var(--glass-edge); border-top-color: var(--glass-edge-hi);
+}
+/* мелкие плитки списков — лёгкое стекло без тяжёлого блюра (перф на мобиле) */
+.quest, .ex, .tile, .opt, .btn-chip, .lift-badge {
+  position: relative;
+  background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.028));
+  border: 1px solid var(--glass-edge); border-top-color: var(--glass-edge-hi);
+}
+/* верхний 1px-хайлайт (обязательный по бrenду) на основных поверхностях */
+.card::before, .recipe::before, .quest::before, .ex::before {
+  content: ""; position: absolute; inset: 0 0 auto 0; height: 1px; border-radius: inherit; z-index: 1;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.24) 50%, transparent); pointer-events: none;
+}
+/* поля ввода — утопленное стекло */
+.field input, .field select { background: var(--surface-sunken); border: 1px solid var(--glass-edge); color: var(--text-hi); }
+.field input:focus, .field select:focus { outline: none; border-color: var(--accent-line); box-shadow: 0 0 0 3px var(--accent-tint); }
+/* модалка — тёмный фрост-лист */
+.modal { background: var(--glass-tint-strong); background-image: none; -webkit-backdrop-filter: var(--glass-filter-hi); backdrop-filter: var(--glass-filter-hi); border-top: 1px solid var(--glass-edge-hi); }
+.modal-bg { background: rgba(8,9,12,0.66); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+/* coach (ассистент) — фрост поверх лёгкого cyan-тинта */
+.coach { border: 1px solid var(--accent-line); border-top-color: var(--glass-edge-hi); }
+/* сегмент-контрол и трек XP — чистые тёмные wells */
+.seg { background: var(--surface-sunken); }
+/* стеклянный ghost-pill */
+.pill.ghost { background: linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.04)); border: 1px solid var(--glass-edge); -webkit-backdrop-filter: var(--glass-filter); backdrop-filter: var(--glass-filter); }
+/* H1/eyebrow — брендовая типографика */
+.scr-head h1 { letter-spacing: -0.025em; }
+.section-title { color: var(--text-muted); }

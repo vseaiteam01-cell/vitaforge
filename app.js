@@ -467,7 +467,7 @@ function renderStackPanel() {
   S.program.days.forEach(function (d) {
     h += '<div class="section-title">' + esc(d.name.replace(/^День \d+ — /, '')) + '</div>';
     d.exercises.forEach(function (e) {
-      h += '<div class="ex stack-ex"><div class="ex-top"><div style="flex:1"><div class="ex-nm">' + esc(e.name) + '</div>'
+      h += '<div class="ex stack-ex"><div class="ex-top"><div style="flex:1;cursor:pointer" onclick="VF.exInfoStack(\'' + e.id + '\')"><div class="ex-nm">' + esc(e.name) + ' <span class="ex-go">›</span></div>'
         + '<div class="ex-tg">' + (MUSCLE_INFO[e.group] ? MUSCLE_INFO[e.group].name : e.group) + ' · ' + e.sets + '×' + (e.range ? e.range[0] + '–' + e.range[1] : e.reps) + (e.source === 'library' ? ' · добавлено' : '') + '</div></div>'
         + '<div class="ex-acts"><button class="ico-btn" onclick="VF.swapEx(\'' + e.id + '\')">⇄</button><button class="ico-btn" onclick="VF.removeEx(\'' + e.id + '\')">✕</button></div></div></div>';
     });
@@ -480,8 +480,8 @@ function pickListHtml() {
   var list = src.filter(function (x) { return !picker.q || x.name.toLowerCase().indexOf(picker.q.toLowerCase()) >= 0; }).slice(0, 50);
   if (!list.length) return '<div class="empty">Ничего не найдено.</div>';
   return list.map(function (x) {
-    return '<div class="pk-item" onclick="VF.pickAdd(\'' + x.id + '\')"><img src="' + ((x.imgs && x.imgs[0]) || '') + '" loading="lazy" alt="">'
-      + '<div class="pk-tx"><div class="pk-nm">' + esc(x.name) + '</div><div class="pk-meta">' + fineRu(x.muscle) + ' · ' + (x.equipment || '') + ' · ' + (x.mechanic === 'compound' ? 'базовое' : 'изолир.') + '</div></div><span class="pk-plus">' + (picker.mode === 'swap' ? '⇄' : '+') + '</span></div>';
+    return '<div class="pk-item" onclick="VF.exInfo(\'' + x.id + '\')"><img src="' + ((x.imgs && x.imgs[0]) || '') + '" loading="lazy" alt="">'
+      + '<div class="pk-tx"><div class="pk-nm">' + esc(x.name) + '</div><div class="pk-meta">' + fineRu(x.muscle) + ' · ' + equipRu(x.equipment) + ' · ' + (x.mechanic === 'compound' ? 'базовое' : 'изолир.') + '</div></div><span class="pk-plus">' + (picker.mode === 'swap' ? '⇄' : '›') + '</span></div>';
   }).join('');
 }
 function renderPicker() {
@@ -504,6 +504,53 @@ function pickAdd(recId) {
   if (adv.length) { confirmAdvice(rec.name, adv, recId); } else { doAdd(recId); }
 }
 function doAdd(recId) { var e = addToStack(picker.dayId, recId); if (e) { hapNotify('success'); closeModal(); renderGym(); toast('Добавлено в стек'); } }
+
+// ---------- Детальный экран упражнения (как делать + анимация + кнопка внутри) ----------
+var EQUIP_RU = { barbell: 'штанга', dumbbell: 'гантели', machine: 'тренажёр', cable: 'блок', 'body only': 'свой вес', kettlebells: 'гири', bands: 'резина', 'e-z curl bar': 'EZ-гриф', 'exercise ball': 'фитбол', 'medicine ball': 'набивной мяч', 'foam roll': 'ролл', other: 'инвентарь' };
+var LEVEL_RU = { beginner: 'новичок', intermediate: 'средний', expert: 'продвинутый' };
+function equipRu(e) { return EQUIP_RU[e] || e || 'свой вес'; }
+function exViewFromRec(r) { return { name: r.name, imgs: r.imgs || [], primary: (r.primary && r.primary.length ? r.primary : [r.muscle]), secondary: r.secondary || [], group: groupOfFine(r.muscle), equipment: r.equipment, mechanic: r.mechanic, force: r.force, level: r.level, range: r.reps }; }
+function exViewFromEx(e) { return { name: e.name, imgs: e.images || [], primary: e.primaryMuscles || [], secondary: e.secondaryMuscles || [], group: e.group || groupOfFine((e.primaryMuscles || [])[0]), equipment: e.equipment, mechanic: e.mechanic, force: e.force, level: e.level, range: e.range }; }
+function exDemoImgs(imgs, group) {
+  var cap = MUSCLE_INFO[group] ? MUSCLE_INFO[group].name : '';
+  var mus = '<div class="ed-mus">' + miniMuscleSvg(group) + '<div class="ed-cap">' + esc(cap) + '</div></div>';
+  if (!imgs || !imgs.length) return '<div class="ex-demo glass-card" style="justify-content:center">' + mus + '</div>';
+  var demo = '<div class="ed-anim"><img src="' + imgs[0] + '" alt="" loading="lazy">' + (imgs[1] ? '<img class="f2" src="' + imgs[1] + '" alt="" loading="lazy">' : '') + '</div>';
+  return '<div class="ex-demo glass-card">' + demo + mus + '</div>';
+}
+function howToText(v) {
+  var mech = v.mechanic === 'compound' ? 'Базовое многосуставное упражнение' : v.mechanic === 'isolation' ? 'Изолирующее упражнение' : 'Упражнение';
+  var force = v.force === 'push' ? ' с жимовым усилием' : v.force === 'pull' ? ' с тянущим усилием' : v.force === 'static' ? ' статического типа' : '';
+  var prim = (v.primary || []).filter(Boolean).map(fineRu).join(', ');
+  var sec = (v.secondary || []).filter(Boolean).map(fineRu).join(', ');
+  var reps = v.range && v.range.length ? v.range[0] + '–' + v.range[1] : '8–12';
+  var s = mech + force + '. ';
+  if (prim) s += 'Основная нагрузка — ' + prim + (sec ? '; ассистируют ' + sec : '') + '. ';
+  s += 'Анимация выше показывает крайние точки движения. Ориентир: ' + reps + ' повторов, 3–4 рабочих подхода. Двигайся подконтрольно, с полной амплитудой, без рывков — техника важнее веса.';
+  return s;
+}
+var exInfoRec = null;
+function openExInfo(ref, ctx) {
+  var v, exId = null;
+  if (ctx === 'stack') { var o = exById(ref); if (!o) return; v = exViewFromEx(o.ex); exId = ref; }
+  else { var rec = LIB.byId[ref]; if (!rec) return; v = exViewFromRec(rec); exInfoRec = ref; }
+  var h = '<div class="grab"></div><h3 style="margin-bottom:8px">' + esc(v.name) + '</h3>';
+  h += '<div class="exi-tags"><span>' + esc(equipRu(v.equipment)) + '</span><span>' + (v.mechanic === 'compound' ? 'базовое' : 'изолирующее') + '</span>' + (v.level ? '<span>' + (LEVEL_RU[v.level] || v.level) + '</span>' : '') + '</div>';
+  h += exDemoImgs(v.imgs, v.group);
+  h += '<div class="exi-how"><div class="exi-how-t">Как делать</div><p>' + esc(howToText(v)) + '</p></div>';
+  var mus = (v.primary || []).filter(Boolean).map(function (m) { return '<span class="exi-m prim">' + esc(fineRu(m)) + '</span>'; }).join('') + (v.secondary || []).filter(Boolean).map(function (m) { return '<span class="exi-m">' + esc(fineRu(m)) + '</span>'; }).join('');
+  if (mus) h += '<div class="exi-mus-t">Работают мышцы</div><div class="exi-mus">' + mus + '</div>';
+  if (ctx === 'picker') h += '<button class="pill" onclick="VF.exInfoConfirm()">＋ Добавить в стек</button><button class="pill ghost sm" style="margin-top:8px" onclick="VF.openPickerBack()">‹ Назад к выбору</button>';
+  else if (ctx === 'swap') h += '<button class="pill" onclick="VF.exInfoConfirm()">⇄ Заменить на это</button><button class="pill ghost sm" style="margin-top:8px" onclick="VF.openPickerBack()">‹ Назад к выбору</button>';
+  else h += '<button class="pill" onclick="VF.exInfoLog(\'' + exId + '\')">Записать подход</button><button class="pill ghost sm" style="margin-top:8px" onclick="VF.closeModal()">Закрыть</button>';
+  openModal(h);
+}
+function exInfoConfirm() {
+  var recId = exInfoRec; if (!recId) return;
+  if (picker.mode === 'swap') { var e = swapExercise(picker.swapId, recId); if (e) { hapNotify('success'); closeModal(); renderGym(); toast('Заменено, история сохранена'); } return; }
+  var rec = LIB.byId[recId]; var adv = addAdvice(rec, picker.dayId);
+  if (adv.length) confirmAdvice(rec.name, adv, recId); else doAdd(recId);
+}
 function confirmAdvice(name, msgs, recId) {
   pendingAdd = recId;
   var h = '<div class="grab"></div><h3>🤖 Ассистент</h3>'
@@ -1311,6 +1358,10 @@ window.VF = {
   pickFine: function (f) { picker.fine = f; renderPicker(); },
   pickSearch: function (v) { picker.q = v; var el = $('#pkList'); if (el) el.innerHTML = pickListHtml(); },
   pickAdd: function (id) { pickAdd(id); },
+  exInfo: function (id) { openExInfo(id, picker.mode === 'swap' ? 'swap' : 'picker'); },
+  exInfoStack: function (id) { openExInfo(id, 'stack'); },
+  exInfoConfirm: function () { exInfoConfirm(); },
+  exInfoLog: function (id) { openLogger(id); },
   confirmAddYes: function () { if (pendingAdd) { var r = pendingAdd; pendingAdd = null; doAdd(r); } },
   openPickerBack: function () { renderPicker(); },
   regenStack: function () {
