@@ -52,7 +52,9 @@ var MON = ['янв', 'фев', 'мар', 'апр', 'мая', 'июн', 'июл',
 function ddmm(d) { return d.getDate() + ' ' + MON[d.getMonth()]; }
 
 // ---------- Storage / state ----------
-var KEY = 'vitaforge_v2';
+var STORE_PREFIX = 'vitaforge', STORE_VER = 3;
+function tgUserId() { try { var u = tg && tg.initDataUnsafe && tg.initDataUnsafe.user; if (u && u.id) return String(u.id); } catch (e) {} return null; }
+function storeKey() { var uid = tgUserId(); return STORE_PREFIX + '_v' + STORE_VER + '__' + (uid ? 'tg_' + uid : 'local'); }
 var S = null;
 function defaultState() {
   return {
@@ -75,12 +77,19 @@ function defaultState() {
   };
 }
 function load() {
-  try { var raw = localStorage.getItem(KEY); if (raw) { S = JSON.parse(raw); } } catch (e) {}
-  if (!S || S.v !== 2) S = defaultState();
+  var raw = null;
+  try { raw = localStorage.getItem(storeKey()); } catch (e) {}
+  if (raw) { try { S = JSON.parse(raw); } catch (e) {} }
+  if (!S) { try { var legacy = localStorage.getItem('vitaforge_v2'); if (legacy) S = JSON.parse(legacy); } catch (e) {} } // миграция старых данных
+  if (!S || (S.v !== 2 && S.v !== 3)) S = defaultState();
   if (!S.program) S.program = JSON.parse(JSON.stringify(window.DEFAULT_PROGRAM));
+  if (!S.tombstones) S.tombstones = {};
+  S.v = 3;
+  buildLib();
+  enrichProgram();
   return S;
 }
-function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+function save() { try { localStorage.setItem(storeKey(), JSON.stringify(S)); } catch (e) {} }
 
 // ---------- Strength math ----------
 function e1rm(w, reps) { return w * (1 + reps / 30); }
@@ -336,7 +345,164 @@ var MUSCLE_INFO = {
   legs: { name: 'Ноги', tips: 'Колени/бёдра: при боли в колене урежь глубину и вес, грей до, лёд после. Потянул заднюю/квадрицепс — RICE 48 ч, затем лёгкая растяжка и низкая нагрузка. Хромаешь — пауза.' }
 };
 var EX_MUSCLE = { chest_up: 'chest', chest_low: 'chest', bench_mch: 'chest', biceps_bar: 'arms', triceps_rev: 'arms', delts_lat: 'shoulders', delts_front: 'shoulders', delts_rear: 'shoulders', row_chest: 'back', pullover: 'back', low_row: 'back', abs_plan: 'abs', neck: 'back', leg_ext: 'legs', leg_curl: 'legs', calves: 'legs', glutes: 'legs' };
-function muscleOf(exId) { return EX_MUSCLE[exId] || 'other'; }
+// db-muscle (free-exercise-db вокаб) -> наш тонкий id
+var DB2FINE = { abdominals: 'abs', adductors: 'adductors', biceps: 'biceps', calves: 'calves', chest: 'chest', forearms: 'forearms', glutes: 'glutes', hamstrings: 'hams', lats: 'lats', 'lower back': 'lower_back', 'middle back': 'mid_back', quadriceps: 'quads', shoulders: 'delts', traps: 'traps', triceps: 'triceps', neck: 'neck' };
+function fineRu(f) { var t = window.MUSCLE_TAX && window.MUSCLE_TAX[f]; return t ? t.ru : f; }
+function groupOfFine(f) { var t = window.MUSCLE_TAX && window.MUSCLE_TAX[f]; return t ? t.group : 'other'; }
+function slugsOfFine(f) { var t = window.MUSCLE_TAX && window.MUSCLE_TAX[f]; return t ? t.svg : []; }
+
+// ---------- Library (из window.EXERCISES, 865 упр.) ----------
+var LIB = { byId: {}, byGroup: { chest: [], back: [], shoulders: [], arms: [], abs: [], legs: [] }, byMuscle: {}, ready: false };
+function buildLib() {
+  if (LIB.ready) return;
+  (window.EXERCISES || []).forEach(function (x) {
+    x._group = groupOfFine(x.muscle);
+    LIB.byId[x.id] = x;
+    if (LIB.byGroup[x._group]) LIB.byGroup[x._group].push(x);
+    (LIB.byMuscle[x.muscle] = LIB.byMuscle[x.muscle] || []).push(x);
+  });
+  // core-упражнения первыми
+  Object.keys(LIB.byMuscle).forEach(function (k) { LIB.byMuscle[k].sort(function (a, b) { return (b.core ? 1 : 0) - (a.core ? 1 : 0); }); });
+  LIB.ready = !!(window.EXERCISES && window.EXERCISES.length);
+}
+function enrichProgram() {
+  S.program.days.forEach(function (d) {
+    d.exercises.forEach(function (e) {
+      if (!e.group) e.group = EX_MUSCLE[e.id] || 'other';
+      var img = (window.EX_IMAGES && window.EX_IMAGES[e.id]) || {};
+      if (!e.primaryMuscles) e.primaryMuscles = (img.muscles || []).map(function (m) { return DB2FINE[m] || m; });
+      if (!e.svgSlugs) { var sl = []; (e.primaryMuscles || []).forEach(function (f) { slugsOfFine(f).forEach(function (s) { if (sl.indexOf(s) < 0) sl.push(s); }); }); e.svgSlugs = sl; }
+      if (!e.images) e.images = img.images || [];
+    });
+  });
+}
+function libEntry(rec) {
+  var grp = groupOfFine(rec.muscle), iso = rec.mechanic === 'isolation';
+  var slugs = []; (rec.primary || [rec.muscle]).forEach(function (f) { slugsOfFine(f).forEach(function (s) { if (slugs.indexOf(s) < 0) slugs.push(s); }); });
+  return {
+    id: 'lib_' + rec.id, srcId: rec.id, name: rec.name, group: grp,
+    primaryMuscles: (rec.primary || [rec.muscle]).slice(), secondaryMuscles: (rec.secondary || []).slice(), svgSlugs: slugs,
+    sets: iso ? 3 : 4, range: rec.reps || (iso ? [10, 15] : [8, 12]), reps: rec.reps ? rec.reps[1] : (iso ? 15 : 12),
+    weight: 0, inc: iso ? 2.5 : 5, stepWeeks: iso ? 3 : 2,
+    equipment: rec.equipment, mechanic: rec.mechanic, force: rec.force,
+    images: (rec.imgs || []), source: 'library', est: true, note: '', addedAt: Date.now()
+  };
+}
+function addToStack(dayId, recId) {
+  var rec = LIB.byId[recId]; if (!rec) return null;
+  var day = null; S.program.days.forEach(function (d) { if (d.id === dayId) day = d; }); if (!day) return null;
+  var e = libEntry(rec), base = e.id, n = 0; while (exById(e.id)) { e.id = base + '_' + (++n); }
+  day.exercises.push(e); save(); return e;
+}
+function swapExercise(exId, newRecId) {
+  var rec = LIB.byId[newRecId], o = exById(exId); if (!rec || !o) return null;
+  var e = o.ex, fresh = libEntry(rec);
+  e.srcId = fresh.srcId; e.name = fresh.name; e.group = fresh.group; e.primaryMuscles = fresh.primaryMuscles;
+  e.secondaryMuscles = fresh.secondaryMuscles; e.svgSlugs = fresh.svgSlugs; e.images = fresh.images;
+  e.equipment = fresh.equipment; e.mechanic = fresh.mechanic; e.force = fresh.force; e.swappedFrom = rec.id;
+  save(); return e;
+}
+function removeFromStack(exId) {
+  var o = exById(exId); if (!o) return false; var e = o.ex;
+  var hist = (S.bestE1RM[exId] != null) || S.sessions.some(function (s) { return (s.sets || []).some(function (st) { return st.exId === exId; }); });
+  if (hist) S.tombstones[exId] = { name: e.name, group: e.group };
+  S.program.days.forEach(function (d) { d.exercises = d.exercises.filter(function (x) { return x.id !== exId; }); });
+  save(); return true;
+}
+// ИИ-ассистент: советы при добавлении (дубль той же мышцы / перетрен)
+function addAdvice(rec, dayId) {
+  var prim = (rec.primary && rec.primary[0]) || rec.muscle, grp = groupOfFine(rec.muscle), msgs = [];
+  var dup = [], dayGroup = 0;
+  S.program.days.forEach(function (d) {
+    d.exercises.forEach(function (e) {
+      if (((e.primaryMuscles && e.primaryMuscles[0]) || EX_MUSCLE[e.id]) === prim && e.name !== rec.name) dup.push(e.name);
+      if (d.id === dayId && e.group === grp) dayGroup++;
+    });
+  });
+  if (dup.length) msgs.push('У тебя уже есть упражнение на ту же мышцу (' + fineRu(prim) + '): «' + dup[0] + '». Ещё одно того же типа даст в основном перетрен, а не рост.');
+  if (dayGroup >= 4) msgs.push('В этом дне уже ' + dayGroup + ' упражнений на «' + (MUSCLE_INFO[grp] ? MUSCLE_INFO[grp].name : grp) + '» — это много, риск перетрена.');
+  return msgs;
+}
+function weeklyVolumeByGroup(weeks) {
+  weeks = weeks || 1; var now = new Date(), out = { chest: 0, back: 0, shoulders: 0, arms: 0, abs: 0, legs: 0 };
+  S.sessions.forEach(function (s) {
+    if (daysBetween(parseKey(s.date), now) >= weeks * 7) return;
+    (s.sets || []).forEach(function (st) { var g = muscleOf(st.exId); if (out[g] != null) out[g]++; });
+  });
+  return out;
+}
+function checkOvertraining(weeks) {
+  var vol = weeklyVolumeByGroup(weeks || 1), out = [];
+  var MRV = { chest: 22, back: 25, shoulders: 26, arms: 26, abs: 25, legs: 25 }, MEV = { chest: 8, back: 10, shoulders: 8, arms: 6, abs: 4, legs: 8 };
+  Object.keys(vol).forEach(function (g) { out.push({ group: g, sets: vol[g], status: vol[g] > MRV[g] ? 'high' : (vol[g] < MEV[g] ? 'under' : 'ok') }); });
+  return out;
+}
+function muscleOf(exId) { var o = exById(exId); if (o && o.ex.group) return o.ex.group; if (S.tombstones && S.tombstones[exId]) return S.tombstones[exId].group; return EX_MUSCLE[exId] || 'other'; }
+
+// ---------- Stack UI (Мой стек + пикер по тонкой мышце + ассистент) ----------
+var picker = { dayId: null, fine: 'chest', q: '', mode: 'add', swapId: null };
+var pendingAdd = null;
+function renderStackPanel() {
+  var h = '<div class="coach"><span class="ci">🗂</span><div><b style="color:var(--text-hi)">Мой стек</b><br>Твоя программа на этом аккаунте. Добавляй/меняй упражнения — ИИ-ассистент подскажет про дубли и перетрен.</div></div>';
+  var ot = checkOvertraining(1);
+  h += '<div class="vol-badges">' + ot.map(function (o) { return '<span class="vb ' + o.status + '">' + (MUSCLE_INFO[o.group] ? MUSCLE_INFO[o.group].name : o.group) + ' · ' + o.sets + '</span>'; }).join('') + '</div>';
+  h += '<div class="hint" style="margin:2px 0 8px">Сеты/нед по группам · <b style="color:var(--accent)">норм</b> / <span style="color:var(--warn)">перебор</span> / <span style="color:var(--text-faint)">мало</span>. Ориентир, не медсовет.</div>';
+  S.program.days.forEach(function (d) {
+    h += '<div class="section-title">' + esc(d.name.replace(/^День \d+ — /, '')) + '</div>';
+    d.exercises.forEach(function (e) {
+      h += '<div class="ex stack-ex"><div class="ex-top"><div style="flex:1"><div class="ex-nm">' + esc(e.name) + '</div>'
+        + '<div class="ex-tg">' + (MUSCLE_INFO[e.group] ? MUSCLE_INFO[e.group].name : e.group) + ' · ' + e.sets + '×' + (e.range ? e.range[0] + '–' + e.range[1] : e.reps) + (e.source === 'library' ? ' · добавлено' : '') + '</div></div>'
+        + '<div class="ex-acts"><button class="ico-btn" onclick="VF.swapEx(\'' + e.id + '\')">⇄</button><button class="ico-btn" onclick="VF.removeEx(\'' + e.id + '\')">✕</button></div></div></div>';
+    });
+    h += '<button class="pill ghost sm" style="margin:2px 0 6px" onclick="VF.addEx(\'' + d.id + '\')">+ Добавить упражнение</button>';
+  });
+  return h;
+}
+function pickListHtml() {
+  var src = picker.mode === 'swap' ? (LIB.byMuscle[picker.fine] || []).filter(function (x) { var o = exById(picker.swapId); return !o || x.id !== o.ex.srcId; }) : (LIB.byMuscle[picker.fine] || []);
+  var list = src.filter(function (x) { return !picker.q || x.name.toLowerCase().indexOf(picker.q.toLowerCase()) >= 0; }).slice(0, 50);
+  if (!list.length) return '<div class="empty">Ничего не найдено.</div>';
+  return list.map(function (x) {
+    return '<div class="pk-item" onclick="VF.pickAdd(\'' + x.id + '\')"><img src="' + ((x.imgs && x.imgs[0]) || '') + '" loading="lazy" alt="">'
+      + '<div class="pk-tx"><div class="pk-nm">' + esc(x.name) + '</div><div class="pk-meta">' + fineRu(x.muscle) + ' · ' + (x.equipment || '') + ' · ' + (x.mechanic === 'compound' ? 'базовое' : 'изолир.') + '</div></div><span class="pk-plus">' + (picker.mode === 'swap' ? '⇄' : '+') + '</span></div>';
+  }).join('');
+}
+function renderPicker() {
+  var fines = Object.keys(window.MUSCLE_TAX || {});
+  var h = '<div class="grab"></div><h3>' + (picker.mode === 'swap' ? 'Заменить упражнение' : 'Добавить упражнение') + '</h3>';
+  h += '<div class="pk-chips">' + fines.map(function (f) { return '<button class="' + (picker.fine === f ? 'on' : '') + '" onclick="VF.pickFine(\'' + f + '\')">' + fineRu(f) + '</button>'; }).join('') + '</div>';
+  h += '<input id="pkq" class="pk-search" placeholder="Поиск по названию…" value="' + esc(picker.q) + '" oninput="VF.pickSearch(this.value)">';
+  h += '<div class="pk-list" id="pkList">' + pickListHtml() + '</div>';
+  openModal(h);
+}
+function openExPicker(dayId, fine) {
+  if (!LIB.ready) { toast('База упражнений ещё грузится…'); return; }
+  picker = { dayId: dayId, fine: fine || 'chest', q: '', mode: 'add', swapId: null };
+  renderPicker();
+}
+function pickAdd(recId) {
+  var rec = LIB.byId[recId]; if (!rec) return;
+  if (picker.mode === 'swap') { var e = swapExercise(picker.swapId, recId); if (e) { hapNotify('success'); closeModal(); renderGym(); toast('Заменено, история сохранена'); } return; }
+  var adv = addAdvice(rec, picker.dayId);
+  if (adv.length) { confirmAdvice(rec.name, adv, recId); } else { doAdd(recId); }
+}
+function doAdd(recId) { var e = addToStack(picker.dayId, recId); if (e) { hapNotify('success'); closeModal(); renderGym(); toast('Добавлено в стек'); } }
+function confirmAdvice(name, msgs, recId) {
+  pendingAdd = recId;
+  var h = '<div class="grab"></div><h3>🤖 Ассистент</h3>'
+    + '<div class="coach" style="margin-bottom:14px"><span class="ci">⚠️</span><div>' + msgs.map(esc).join('<br><br>') + '</div></div>'
+    + '<button class="pill" onclick="VF.confirmAddYes()">Всё равно добавить</button>'
+    + '<button class="pill ghost sm" style="margin-top:8px" onclick="VF.openPickerBack()">Назад к выбору</button>';
+  openModal(h);
+}
+function swapEx(exId) { var o = exById(exId); if (!o) return; if (!LIB.ready) { toast('База ещё грузится…'); return; } picker = { dayId: null, fine: (o.ex.primaryMuscles && o.ex.primaryMuscles[0]) || 'chest', q: '', mode: 'swap', swapId: exId }; renderPicker(); }
+function removeEx(exId) {
+  if (KEY_LIFTS.indexOf(exId) >= 0) {
+    var h = '<div class="grab"></div><h3>Убрать ключевой лифт?</h3><div class="coach" style="margin-bottom:14px"><span class="ci">⚠️</span><div>Это один из лифтов силового индекса. История и PR сохранятся, но индекс пересчитается.</div></div><button class="pill" style="color:var(--danger)" onclick="VF.removeExConfirm(\'' + exId + '\')">Убрать</button><button class="pill ghost sm" style="margin-top:8px" onclick="VF.closeModal()">Отмена</button>';
+    openModal(h); return;
+  }
+  removeFromStack(exId); haptic('medium'); renderGym(); toast('Удалено из стека');
+}
 function exForMuscle(id) { return allEx().filter(function (o) { return muscleOf(o.ex.id) === id; }); }
 function muscleMenu(id) {
   var info = MUSCLE_INFO[id] || { name: 'Мышца' };
@@ -395,7 +561,7 @@ function svgFor(side) {
   var paths = data.muscles.map(function (m) {
     if (m.group === 'base') return '<path class="m-base" d="' + m.d + '"/>';
     var rec = Math.round(groupRecovery(m.group) * 100);
-    return '<path class="m-mus' + (rec >= 88 ? ' charged' : '') + '" data-group="' + m.group + '" style="--rec:' + rec + '" d="' + m.d + '"/>';
+    return '<path class="m-mus' + (rec >= 88 ? ' charged' : '') + '" data-group="' + m.group + '" data-slug="' + m.slug + '" style="--rec:' + rec + '" d="' + m.d + '"/>';
   }).join('');
   return '<svg id="mm-' + side + '" class="mmap" viewBox="' + data.viewBox + '" preserveAspectRatio="xMidYMid meet">' + paths + '</svg>';
 }
@@ -507,7 +673,7 @@ function renderGym() {
   var seg = renderGym.seg || 'today';
   var rec = recommendDay();
   var h = '<div class="scr-head"><div><div class="eyebrow">Зал</div><h1>Качаемся</h1></div></div>';
-  h += '<div class="seg">' + segBtn('today', seg, 'Сессия') + segBtn('muscles', seg, 'Мышцы') + segBtn('progress', seg, 'Прогресс') + segBtn('calendar', seg, 'Календарь') + '</div>';
+  h += '<div class="seg seg-scroll">' + segBtn('today', seg, 'Сессия') + segBtn('stack', seg, 'Стек') + segBtn('muscles', seg, 'Мышцы') + segBtn('progress', seg, 'Прогресс') + segBtn('calendar', seg, 'Календарь') + '</div>';
   if (seg === 'today') {
     h += '<div class="coach"><span class="ci">🤖</span><div><b style="color:var(--text-hi)">' + esc(rec.day.name) + '</b><br>Почему этот: дольше всего не тренировал эту группу (' + (rec.since > 90 ? 'ещё не было' : rec.since + ' дн. назад') + ') — восстановилась, бьём её.</div></div>';
     h += '<div style="height:14px"></div>';
@@ -529,6 +695,8 @@ function renderGym() {
         + '<div class="track" style="margin-top:10px"><div class="fill" style="width:' + clamp(pr.now / pr.future * 100, 5, 100) + '%"></div></div></div>';
     });
     h += '<div class="hint">Прогноз построен по двойной прогрессии: шаг прибавки и частота заложены в каждое упражнение. Реальные PR двигают линию быстрее.</div>';
+  } else if (seg === 'stack') {
+    h += renderStackPanel();
   } else if (seg === 'muscles') {
     h += muscleMapPanel();
   } else {
@@ -935,7 +1103,16 @@ window.VF = {
   uploadDoc: uploadDoc, openLink: openLink, reset: reset,
   muscleMenu: muscleMenu, muscleExercises: muscleExercises, muscleInjury: muscleInjury,
   clearMuscle: function () { renderGym.muscle = null; renderGym(); },
-  heroView: function (v) { renderHome.view = v; haptic('light'); renderHome(); }
+  heroView: function (v) { renderHome.view = v; haptic('light'); renderHome(); },
+  addEx: function (dayId) { openExPicker(dayId, 'chest'); },
+  swapEx: function (id) { swapEx(id); },
+  removeEx: function (id) { removeEx(id); },
+  removeExConfirm: function (id) { removeFromStack(id); haptic('medium'); closeModal(); renderGym(); toast('Удалено'); },
+  pickFine: function (f) { picker.fine = f; renderPicker(); },
+  pickSearch: function (v) { picker.q = v; var el = $('#pkList'); if (el) el.innerHTML = pickListHtml(); },
+  pickAdd: function (id) { pickAdd(id); },
+  confirmAddYes: function () { if (pendingAdd) { var r = pendingAdd; pendingAdd = null; doAdd(r); } },
+  openPickerBack: function () { renderPicker(); }
 };
 
 // ---------- Boot ----------
