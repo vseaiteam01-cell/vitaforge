@@ -224,8 +224,14 @@ function generateMeal(slot, key) {
     if (scale <= 0.5 || scale >= 2.5) score += 0.2;
     return { r: r, scale: scale, kcal: Math.round(sk), p: Math.round(sp), f: Math.round(sf), c: Math.round(sc), score: score };
   }).sort(function (a, b) { return a.score - b.score; });
-  var top = scored.slice(0, Math.min(3, scored.length));
-  var pick = top[Math.floor(Math.random() * top.length)];
+  // широкий взвешенный выбор: в игре весь подходящий список (а не топ-3),
+  // лучший макро-фит = выше шанс, но разнообразие максимальное.
+  var fresh = scored.filter(function (s) { return used.indexOf(s.r.name) < 0; });
+  if (fresh.length < 3) fresh = scored;                                   // всё съедено сегодня — снимаем фильтр
+  var pool = fresh.slice(0, Math.max(15, Math.ceil(fresh.length * 0.6))); // пул из ~60% лучших по фиту
+  var tot = 0; pool.forEach(function (s) { s._w = 1 / (1 + s.score * s.score); tot += s._w; });
+  var rnd = Math.random() * tot, pick = pool[0];
+  for (var pi = 0; pi < pool.length; pi++) { rnd -= pool[pi]._w; if (rnd <= 0) { pick = pool[pi]; break; } }
   pick.slot = slot;
   pick.ingredients = pick.r.ingredients.map(function (i) { return { item: i.item, grams: Math.round(i.grams * pick.scale / 5) * 5 }; });
   return pick;
