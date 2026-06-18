@@ -522,7 +522,9 @@ function removeEx(exId) {
 }
 // slug пути карты -> тонкая мышца
 var _slug2fine = null;
+var SLUG_PREFER = { 'upper-back': 'lats' };   // lats и mid_back делят один path — отдаём приоритет широчайшим
 function fineOfSlug(slug) {
+  if (SLUG_PREFER[slug]) return SLUG_PREFER[slug];
   if (!_slug2fine) { _slug2fine = {}; var T = window.MUSCLE_TAX || {}; Object.keys(T).forEach(function (f) { (T[f].svg || []).forEach(function (s) { if (!_slug2fine[s]) _slug2fine[s] = f; }); }); }
   return _slug2fine[slug] || null;
 }
@@ -727,14 +729,38 @@ function renderHome() {
   if (hv === '3d') { if (window.mountAvatar) window.mountAvatar($('#avatar'), Object.assign(avatarParams(), { tapMode: 'open' })); }
   else { mountMuscleMap(); }
 }
+var labSide = 'front';   // какая сторона анатомии открыта в зале мышц
 function openMuscleLab() {
   var lab = $('#muscleLab'); if (!lab) return;
-  lab.innerHTML = '<div class="mlab-head"><button class="mlab-x" onclick="VF.closeMuscleLab()">‹ Назад</button><div class="mlab-title">Карта мышц</div><div style="width:64px"></div></div>'
-    + '<div class="mlab-stage" id="mlabStage"></div>'
-    + '<div class="mlab-hint">Покрути фигуру пальцем и тапни мышцу — покажу упражнения и восстановление</div>';
+  lab.innerHTML = '<div class="mlab-head"><button class="mlab-x" onclick="VF.closeMuscleLab()">‹ Назад</button><div class="mlab-title">Мышцы</div><div style="width:64px"></div></div>'
+    + '<div class="mlab-toggle"><div class="mlab-side-seg"><button class="' + (labSide === 'front' ? 'on' : '') + '" onclick="VF.labSide(\'front\')">Спереди</button><button class="' + (labSide === 'back' ? 'on' : '') + '" onclick="VF.labSide(\'back\')">Сзади</button></div></div>'
+    + '<div class="mlab-stage" id="mlabStage"><div id="mlabWrap" class="mlab-map">' + svgFor(labSide) + '</div><div class="mlab-name" id="mlabName"></div></div>'
+    + '<div class="mlab-hint">Наведи или тапни мышцу — подсветится целиком, покажу упражнения и восстановление</div>';
   lab.classList.add('show');
-  if (window.mountAvatar) window.mountAvatar($('#mlabStage'), Object.assign(avatarParams(), { tapMode: 'select' }));
+  bindLabMap();
   haptic('light');
+}
+function bindLabMap() {
+  var wrap = document.getElementById('mlabWrap'); if (!wrap) return;
+  var svg = wrap.querySelector('svg.mmap');
+  if (svg) { try { var b = svg.getBBox(); svg.setAttribute('viewBox', (b.x - 14) + ' ' + (b.y - 14) + ' ' + (b.width + 28) + ' ' + (b.height + 28)); } catch (e) {} }
+  var nameEl = document.getElementById('mlabName');
+  function labelOf(p) { var fine = fineOfSlug(p.getAttribute('data-slug')); if (fine) return fineRu(fine); var g = p.getAttribute('data-group'); return MUSCLE_INFO[g] ? MUSCLE_INFO[g].name : g; }
+  function hot(p) {
+    if (p === wrap._hot) return;
+    if (wrap._hot) wrap._hot.classList.remove('active');
+    if (p) { p.classList.add('active'); if (nameEl) { nameEl.textContent = labelOf(p); nameEl.classList.add('show'); } }
+    else if (nameEl) nameEl.classList.remove('show');
+    wrap._hot = p;
+  }
+  wrap.addEventListener('pointermove', function (e) { hot(e.target.closest ? e.target.closest('path.m-mus') : null); });
+  wrap.addEventListener('pointerleave', function () { hot(null); });
+  wrap.addEventListener('pointerdown', function (e) { var p = e.target.closest ? e.target.closest('path.m-mus') : null; if (p) hot(p); });
+  wrap.addEventListener('click', function (e) {
+    var p = e.target.closest ? e.target.closest('path.m-mus') : null; if (!p) return;
+    haptic('light'); var fine = fineOfSlug(p.getAttribute('data-slug'));
+    if (fine) muscleMenuFine(fine); else window.VF.muscleMenu(p.getAttribute('data-group'));
+  });
 }
 function closeMuscleLab() { var lab = $('#muscleLab'); if (lab) lab.classList.remove('show'); renderHome(); }
 renderHome.view = '3d';
@@ -1277,6 +1303,7 @@ window.VF = {
   heroView: function (v) { renderHome.view = v; haptic('light'); renderHome(); },
   openMuscleLab: function () { openMuscleLab(); },
   closeMuscleLab: function () { closeMuscleLab(); },
+  labSide: function (s) { labSide = s; hapSelect(); openMuscleLab(); },
   addEx: function (dayId) { openExPicker(dayId, 'chest'); },
   swapEx: function (id) { swapEx(id); },
   removeEx: function (id) { removeEx(id); },

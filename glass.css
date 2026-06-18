@@ -176,9 +176,11 @@ body::before {
 .mmap { width: 50%; height: auto; max-height: 46vh; display: block; }
 .m-base { fill: #262b36; opacity: .42; }
 .m-mus { fill: #2c333f; fill: color-mix(in srgb, var(--accent) calc(var(--rec, 0) * 1%), #2b3140);
-  stroke: rgba(255,255,255,.05); stroke-width: 1; cursor: pointer; transition: fill .3s var(--ease-out), filter .25s; }
+  stroke: rgba(255,255,255,.06); stroke-width: 1; cursor: pointer; transition: fill .16s var(--ease-out), filter .2s; }
 .m-mus.charged { filter: drop-shadow(0 0 4px rgba(63,211,216,.6)); }
-.m-mus:active { filter: drop-shadow(0 0 9px rgba(63,211,216,.95)); }
+/* наведение/выбор — ВСЯ мышца заливается голубым */
+.m-mus:hover, .m-mus.active { fill: #6FC3FF; stroke: #BFE4FF; stroke-width: 1.4; filter: drop-shadow(0 0 8px rgba(111,195,255,.9)); }
+.m-mus:active { filter: drop-shadow(0 0 10px rgba(111,195,255,.98)); }
 .mm-legend { display: flex; justify-content: center; gap: 16px; margin: 2px 0 8px; }
 .mm-legend span { display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: var(--fs-sm); }
 .mm-legend .d { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
@@ -293,6 +295,23 @@ body::before {
 .mlab-title { font-family: var(--font-mono); font-size: var(--fs-label); letter-spacing: var(--tracking-label); text-transform: uppercase; color: var(--text-muted); }
 .mlab-stage { flex: 1; min-height: 0; position: relative; }
 .mlab-hint { text-align: center; color: var(--text-muted); font-size: var(--fs-sm); padding: 10px var(--screen-pad) calc(22px + var(--safe-bottom)); }
+/* полноэкранная анатомия в зале мышц */
+.mlab-toggle { display: flex; justify-content: center; padding: 2px 0 8px; }
+.mlab-side-seg { display: inline-flex; gap: 4px; background: var(--glass-tint); border: 1px solid var(--glass-edge); border-radius: var(--r-pill); padding: 3px; -webkit-backdrop-filter: var(--glass-filter); backdrop-filter: var(--glass-filter); }
+.mlab-side-seg button { border: none; background: none; color: var(--text-muted); font-size: var(--fs-sm); font-weight: var(--fw-semi); padding: 7px 18px; border-radius: var(--r-pill); cursor: pointer; transition: all .14s var(--ease-out); }
+.mlab-side-seg button.on { background: var(--accent); color: #06222A; }
+.mlab-map { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 6px 12px; }
+.mlab-map svg.mmap { width: auto; height: 100%; max-height: 100%; max-width: 100%; }
+.mlab-name { position: absolute; left: 50%; bottom: 10px; transform: translateX(-50%) translateY(6px); z-index: 6; pointer-events: none; opacity: 0;
+  transition: opacity .14s var(--ease-out), transform .14s var(--ease-out);
+  font-family: var(--font-mono); font-size: var(--fs-sm); font-weight: var(--fw-semi); color: #EAF6FF;
+  padding: 9px 20px; border-radius: var(--r-pill); border: 1px solid rgba(111,195,255,.5); background: rgba(111,195,255,.18);
+  -webkit-backdrop-filter: var(--glass-filter); backdrop-filter: var(--glass-filter); box-shadow: 0 4px 22px rgba(111,195,255,.28); }
+.mlab-name.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+/* в зале-селекторе мышцы спокойно-нейтральные, выбранная — ярко голубая (без recovery-тинта, чтобы выбор читался) */
+.mlab-map svg.mmap .m-mus { fill: #333c4b; filter: none; stroke: rgba(255,255,255,.07); }
+.mlab-map svg.mmap .m-mus.charged { filter: none; }
+.mlab-map svg.mmap .m-mus:hover, .mlab-map svg.mmap .m-mus.active { fill: #6FC3FF; stroke: #CDEAFF; stroke-width: 1.6; filter: drop-shadow(0 0 10px rgba(111,195,255,.95)); }
 
 /* подсветка тапнутой мышцы прямо на 3D-болване (model-viewer hotspot) */
 .vf-hit { width: 30px; height: 30px; pointer-events: none; transform: translate(-50%, -50%); }
