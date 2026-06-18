@@ -1,5 +1,13 @@
+# secrets — НИКОГДА не коммитить токены
+.env
+bot/.env
+*.session
+*.session-journal
+
 # dev artifacts
 _v1-classic/
+_design_ref.json
+*_ref.json
 extract.py
 snap_server.py
 avatar_snap.jpg

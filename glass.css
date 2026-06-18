@@ -1,0 +1,174 @@
+/* ============================================================
+   VITAFORGE — LIQUID-GLASS LAYER (link AFTER tokens.css + styles.css)
+   Adds glass materials, living background, frosted chrome, gold PR,
+   conic rings, rest-timer. Neumorphic base stays; this overrides chrome.
+   ============================================================ */
+:root {
+  /* ---------- glass materials ---------- */
+  --glass-tint:        rgba(28, 33, 44, 0.55);
+  --glass-tint-strong: rgba(22, 26, 36, 0.74);
+  --glass-tint-light:  rgba(46, 53, 68, 0.42);
+  --glass-tint-accent: rgba(40, 90, 96, 0.34);
+  --glass-blur:        14px;
+  --glass-blur-hi:     20px;
+  --glass-blur-lo:     8px;
+  --glass-sat:         saturate(170%);
+  --glass-filter:      blur(var(--glass-blur)) var(--glass-sat);
+  --glass-filter-hi:   blur(var(--glass-blur-hi)) saturate(180%);
+  --glass-filter-lo:   blur(var(--glass-blur-lo)) saturate(150%);
+
+  --glass-edge:        rgba(255, 255, 255, 0.12);
+  --glass-edge-hi:     rgba(255, 255, 255, 0.30);
+  --glass-spec: inset 0 1px 0 var(--glass-edge-hi),
+                inset 0 -1px 0 rgba(255,255,255,0.04),
+                inset 0 0 0 0.5px var(--glass-edge);
+  --glass-spec-accent: inset 0 1px 0 rgba(94,230,234,0.40),
+                       inset 0 0 0 0.5px var(--accent-line);
+
+  --glass-lift:    0 8px 32px rgba(0,0,0,0.32), 0 2px 8px rgba(0,0,0,0.24);
+  --glass-lift-hi: 0 -16px 44px rgba(0,0,0,0.46), 0 2px 10px rgba(0,0,0,0.30);
+  --glass-lift-sm: 0 4px 18px rgba(0,0,0,0.28);
+
+  /* ---------- accent glows + gold (Hevy PR) ---------- */
+  --glow-edge-cyan:  0 0 0 1px var(--accent-line), 0 0 22px rgba(63,211,216,0.30);
+  --glow-pr-gold:    0 0 0 1px rgba(255,197,61,0.55), 0 0 26px rgba(255,197,61,0.42);
+  --gold:            #F5B83D;
+  --gold-ink:        #2A1E00;
+  --gold-tint:       rgba(245,184,61,0.16);
+  --gold-grad:       linear-gradient(135deg, #FFD56B 0%, #F5B83D 52%, #D99A1E 100%);
+
+  /* ---------- motion ---------- */
+  --ease-glass:  cubic-bezier(0.32, 0.72, 0, 1);
+  --dur-drift:   24s;
+  --dur-shimmer: 3s;
+  --dur-ring:    900ms;
+}
+
+/* ===== LIVING BACKGROUND ===== */
+body {
+  background-color: var(--bg-base);
+  background-image:
+    radial-gradient(46% 38% at 18% 8%,  rgba(63,211,216,0.16), transparent 60%),
+    radial-gradient(54% 44% at 88% 22%, rgba(40,90,140,0.18),  transparent 62%),
+    radial-gradient(60% 50% at 50% 108%, rgba(94,230,234,0.07), transparent 64%),
+    var(--bg-gradient);
+  background-attachment: fixed;
+  background-repeat: no-repeat;
+}
+body::before {
+  content: ""; position: fixed; inset: -20%; z-index: -1; pointer-events: none;
+  background:
+    radial-gradient(38% 30% at 30% 20%, rgba(63,211,216,0.10), transparent 60%),
+    radial-gradient(40% 32% at 72% 70%, rgba(40,120,150,0.12), transparent 62%);
+  animation: bg-drift var(--dur-drift) var(--ease-in-out) infinite alternate;
+}
+@keyframes bg-drift {
+  from { transform: translate3d(-3%, -2%, 0) scale(1.05); }
+  to   { transform: translate3d(3%, 3%, 0)   scale(1.12); }
+}
+
+/* ===== GLASS PRIMITIVES ===== */
+.glass-pane, .glass-card {
+  position: relative;
+  background: var(--glass-tint);
+  -webkit-backdrop-filter: var(--glass-filter); backdrop-filter: var(--glass-filter);
+  border: 1px solid transparent; border-radius: var(--r-xl);
+  box-shadow: var(--glass-spec), var(--glass-lift);
+}
+.glass-card { padding: var(--sp-5); overflow: hidden; }
+.glass-card::after {
+  content: ""; position: absolute; inset: 0 0 auto 0; height: 42%; border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255,255,255,.08), transparent 90%); pointer-events: none;
+}
+.glass-card.accent { box-shadow: var(--glass-spec-accent), var(--glass-lift), var(--glow-edge-cyan); }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass-pane, .glass-card, .tabbar, .modal, .rest-timer, .toast { background: var(--surface-2) !important; }
+}
+
+/* ===== FROSTED TAB BAR + sliding liquid pill + SVG icons ===== */
+.tabbar {
+  background: var(--glass-tint);
+  -webkit-backdrop-filter: var(--glass-filter-hi); backdrop-filter: var(--glass-filter-hi);
+  box-shadow: var(--glass-spec), var(--glass-lift-hi);
+  border: 1px solid transparent; border-top: 1px solid var(--glass-edge); overflow: hidden;
+}
+.tabbar::before {
+  content: ""; position: absolute; top: 8px; bottom: 8px; left: 6px; z-index: 0;
+  width: calc((100% - 12px) / 5); border-radius: var(--r-md);
+  background: var(--glass-tint-accent); box-shadow: var(--glass-spec-accent);
+  transform: translateX(calc(var(--tab-x, 0) * 100%));
+  transition: transform var(--dur-base) var(--ease-glass);
+}
+.tab { position: relative; z-index: 1; }
+.tab .ic { filter: none !important; display: grid; place-items: center; height: 24px; }
+.tab .ic svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; transition: transform var(--dur-press); }
+.tab.active .ic svg { stroke: var(--accent); filter: drop-shadow(0 0 6px rgba(63,211,216,.55)); }
+.tab:active .ic svg { transform: scale(.86); }
+
+/* ===== GLASS HERO (Home) with charged shimmer ===== */
+.hero-card {
+  background: linear-gradient(160deg, var(--glass-tint-light), var(--glass-tint));
+  -webkit-backdrop-filter: var(--glass-filter); backdrop-filter: var(--glass-filter);
+  box-shadow: var(--glass-spec), var(--glass-lift), var(--glow-ambient);
+  border: 1px solid transparent;
+}
+.hero-card::after {
+  content: ""; position: absolute; top: 0; left: -45%; width: 45%; height: 100%; z-index: 1;
+  background: linear-gradient(105deg, transparent, rgba(255,255,255,.10) 50%, transparent);
+  transform: skewX(-18deg); animation: shimmer var(--dur-shimmer) var(--ease-in-out) infinite; pointer-events: none;
+}
+@keyframes shimmer { 0% { left: -45%; } 55%, 100% { left: 130%; } }
+
+/* ===== CONIC PROGRESS RING (level disc) ===== */
+.gring {
+  --p: 0; --sz: 46px; --tk: 5px; position: relative;
+  width: var(--sz); height: var(--sz); border-radius: 50%; display: grid; place-items: center; flex: none;
+  background: conic-gradient(from -90deg, var(--accent-bright) calc(var(--p) * 1%), var(--surface-sunken) 0);
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - var(--tk)), #000 calc(100% - var(--tk)));
+  mask: radial-gradient(farthest-side, transparent calc(100% - var(--tk)), #000 calc(100% - var(--tk)));
+  filter: drop-shadow(0 0 7px rgba(63,211,216,.35));
+}
+.gring > * { -webkit-mask: none; mask: none; }
+.gring.near { filter: drop-shadow(0 0 13px rgba(63,211,216,.6)); }
+
+/* ===== GLASS BUTTONS / variants ===== */
+.pill.glass {
+  background: var(--glass-tint-light); -webkit-backdrop-filter: var(--glass-filter); backdrop-filter: var(--glass-filter);
+  color: var(--text-hi); box-shadow: var(--glass-spec), var(--glass-lift-sm); border: 1px solid transparent;
+}
+.pill.glass:active { transform: scale(.965); box-shadow: var(--glass-spec), inset 0 2px 8px rgba(0,0,0,.3); }
+.pill.gold { background: var(--gold-grad); color: var(--gold-ink); box-shadow: 0 10px 26px rgba(217,154,30,.42), inset 0 1px 0 rgba(255,255,255,.45); }
+
+/* ===== REST TIMER (floating glass pill) ===== */
+.rest-timer {
+  position: fixed; left: 50%; bottom: calc(var(--tabbar-h) + 24px + var(--safe-bottom));
+  transform: translateX(-50%) translateY(14px);
+  display: flex; align-items: center; gap: 10px; padding: 9px 8px 9px 16px; border-radius: var(--r-pill);
+  background: var(--glass-tint-strong); -webkit-backdrop-filter: var(--glass-filter-hi); backdrop-filter: var(--glass-filter-hi);
+  box-shadow: var(--glass-spec), var(--glass-lift), var(--glow-edge-cyan); border: 1px solid transparent;
+  z-index: 60; opacity: 0; pointer-events: none; transition: opacity var(--dur-base), transform var(--dur-base) var(--ease-spring);
+}
+.rest-timer.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+.rest-timer .rt-time { color: var(--text-hi); font-weight: var(--fw-x); font-size: var(--fs-h3); min-width: 52px; text-align: center; }
+.rest-timer .rt-lbl { color: var(--text-muted); font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .1em; }
+.rest-timer .rt-x { width: 36px; height: 36px; border-radius: 50%; border: none; background: var(--surface-1); color: var(--accent); font-size: 18px; font-weight: var(--fw-x); }
+.rest-timer .rt-add { background: none; border: 1px solid var(--glass-edge); color: var(--text-mid); border-radius: var(--r-pill); padding: 6px 10px; font-size: var(--fs-sm); font-weight: var(--fw-semi); }
+
+/* ===== GLASS TOAST / MODAL ===== */
+.toast {
+  background: var(--glass-tint-strong); -webkit-backdrop-filter: var(--glass-filter-lo); backdrop-filter: var(--glass-filter-lo);
+  border: 1px solid transparent; box-shadow: var(--glass-spec), var(--glass-lift);
+}
+.toast.win { box-shadow: var(--glass-spec), var(--glow-edge-cyan); }
+.toast.pr { background: var(--gold-tint); color: var(--gold); box-shadow: var(--glow-pr-gold); }
+.modal-bg { background: var(--glass-tint-strong); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.modal {
+  background: var(--glass-tint-strong); background-image: none;
+  -webkit-backdrop-filter: var(--glass-filter-hi); backdrop-filter: var(--glass-filter-hi);
+  box-shadow: var(--glass-spec), var(--glass-lift-hi); border: 1px solid transparent;
+}
+.modal .grab { background: var(--glass-edge-hi); }
+
+@media (prefers-reduced-motion: reduce) {
+  body::before, .hero-card::after { animation: none; }
+}

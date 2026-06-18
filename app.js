@@ -791,6 +791,8 @@ function go(tab) {
   $all('.screen').forEach(function (s) { s.classList.remove('active'); });
   $('#screen-' + tab).classList.add('active');
   $all('.tab').forEach(function (t) { t.classList.toggle('active', t.getAttribute('data-tab') === tab); });
+  var _ti = ['home', 'gym', 'food', 'quests', 'hero'].indexOf(tab);
+  var _tb = $('#tabbar'); if (_tb) _tb.style.setProperty('--tab-x', _ti < 0 ? 0 : _ti);
   renderCur();
   window.scrollTo(0, 0);
   haptic('light');
