@@ -296,6 +296,50 @@ body::before {
 
 /* подсветка тапнутой мышцы прямо на 3D-болване (model-viewer hotspot) */
 .vf-hit { width: 30px; height: 30px; pointer-events: none; transform: translate(-50%, -50%); }
-.vf-hit i { display: block; width: 100%; height: 100%; border-radius: 50%; border: 2px solid var(--accent); background: rgba(84,196,206,.25); box-shadow: 0 0 16px rgba(84,196,206,.9), inset 0 0 10px rgba(84,196,206,.6); }
+.vf-hit i { display: block; width: 100%; height: 100%; border-radius: 50%; border: 2px solid var(--accent); background: rgba(84,196,206,.25); box-shadow: 0 0 16px rgba(84,196,206,.9), inset 0 0 10px rgba(84,196,206,.6); transition: border-color .12s, background .12s, box-shadow .12s; }
 .vf-hit.pulse i { animation: vfhit .6s var(--ease-out); }
+/* состояние наведения/«вождения» — ярко-голубой, чтобы понимать что выбираешь */
+.vf-hit.hover { width: 40px; height: 40px; }
+.vf-hit.hover i { border-color: #7CC4FF; background: rgba(124,196,255,.32); box-shadow: 0 0 22px rgba(124,196,255,.95), inset 0 0 14px rgba(124,196,255,.7); }
 @keyframes vfhit { 0% { transform: scale(.3); opacity: 0; } 50% { transform: scale(1.3); opacity: 1; } 100% { transform: scale(1); opacity: .9; } }
+
+/* плавающая подпись выбираемой мышцы (поверх зала) */
+.vf-mname { position: fixed; left: 50%; bottom: calc(64px + var(--safe-bottom)); transform: translate(-50%, 8px); z-index: 80; pointer-events: none;
+  font-family: var(--font-mono); font-size: var(--fs-sm); font-weight: var(--fw-semi); letter-spacing: .02em; color: #DDF1FF;
+  padding: 8px 16px; border-radius: var(--r-pill); border: 1px solid rgba(124,196,255,.45); background: rgba(124,196,255,.14);
+  -webkit-backdrop-filter: var(--glass-filter); backdrop-filter: var(--glass-filter); box-shadow: 0 4px 22px rgba(124,196,255,.22);
+  opacity: 0; transition: opacity .14s var(--ease-out), transform .14s var(--ease-out); white-space: nowrap; }
+.vf-mname.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---- дата-стрип (выбор дня в Питании) ---- */
+.datestrip { display: flex; align-items: center; gap: 8px; margin: 4px 0 16px; }
+.datestrip .ds-nav { flex: none; width: 42px; height: 42px; border-radius: var(--r-pill); border: 1px solid var(--glass-edge); background: var(--glass-tint); color: var(--text-hi); font-size: 20px; line-height: 1; -webkit-backdrop-filter: var(--glass-filter); backdrop-filter: var(--glass-filter); cursor: pointer; }
+.datestrip .ds-nav:disabled { opacity: .3; }
+.ds-cur { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; height: 42px; border-radius: var(--r-pill); border: 1px solid var(--accent-line); background: var(--accent-tint); color: var(--accent); font-weight: var(--fw-semi); cursor: pointer; -webkit-backdrop-filter: var(--glass-filter); backdrop-filter: var(--glass-filter); }
+.ds-cur .ds-d { font-family: var(--font-mono); font-size: var(--fs-sm); }
+.ds-cur .ds-cal { font-size: 15px; }
+
+/* ---- чипсы приёма пищи (завтрак/обед/ужин/перекус) ---- */
+.slot-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.slot-chips button { flex: 1 1 calc(50% - 8px); min-width: 0; padding: 11px 8px; border-radius: var(--r-md, 14px); border: 1px solid var(--glass-edge); background: var(--glass-tint); color: var(--text-muted); font-size: var(--fs-sm); font-weight: var(--fw-semi); cursor: pointer; -webkit-backdrop-filter: var(--glass-filter); backdrop-filter: var(--glass-filter); transition: all .14s var(--ease-out); }
+.slot-chips button.on { border-color: var(--accent); background: var(--accent-tint); color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+
+/* ---- календарь ---- */
+.cal-head { display: flex; align-items: center; justify-content: space-between; margin: 6px 0 14px; }
+.cal-title { font-family: var(--font-mono); font-weight: var(--fw-semi); color: var(--text-hi); font-size: var(--fs-h3, 17px); }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.cal-dow { margin-bottom: 6px; }
+.cal-dow span { text-align: center; font-family: var(--font-mono); font-size: var(--fs-label, 11px); text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--text-faint); }
+.cal-cell { position: relative; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 12px; border: 1px solid transparent; background: var(--glass-tint); color: var(--text-hi); font-family: var(--font-mono); font-size: var(--fs-sm); cursor: pointer; }
+.cal-cell.empty { background: none; border: none; pointer-events: none; }
+.cal-cell.future { opacity: .28; }
+.cal-cell.today { border-color: var(--accent-line); color: var(--accent); }
+.cal-cell.sel { background: var(--accent); color: #06222A; font-weight: var(--fw-x, 800); border-color: var(--accent); }
+.cal-cell .cal-dots { position: absolute; bottom: 5px; left: 0; right: 0; display: flex; gap: 3px; justify-content: center; }
+.cal-cell .cal-dots i { width: 5px; height: 5px; border-radius: 50%; }
+.cal-dots i.w, .cal-legend i.w { background: var(--accent); }
+.cal-dots i.m, .cal-legend i.m { background: #F4B740; }
+.cal-cell.sel .cal-dots i { box-shadow: 0 0 0 1px rgba(6,34,42,.5); }
+.cal-legend { display: flex; gap: 18px; justify-content: center; margin-top: 14px; color: var(--text-muted); font-size: var(--fs-sm); }
+.cal-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.cal-legend i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }

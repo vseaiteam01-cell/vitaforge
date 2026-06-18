@@ -1,13 +1,14 @@
 /* ============================================================
    VITAFORGE — 3D avatar via <model-viewer> (+ bone-morph)
    Риггованная GLB-модель (Higgsfield image->3D): глиняный вид,
-   вращение 360° + автоповорот, прозрачный фон, М/Ж,
+   ручное вращение (без автоповорота) + зум, прозрачный фон, М/Ж,
    морф по уровню через масштаб костей (мышцы/жир).
+   В зале мышц: голубая подсветка + название мышцы при наведении/тапе.
    ============================================================ */
 (function () {
   var cur = { gender: 'm', muscle: 0, fat: 0.45 };
   var tapMode = 'open';   // 'open' = тап открывает полноэкранный зал мышц; 'select' = тап выбирает мышцу
-  var URLS = { m: 'assets/adam.glb?v=3', f: 'assets/eve.glb?v=1' };
+  var URLS = { m: 'assets/adam.glb?v=4', f: 'assets/eve.glb?v=1' };
   var mv = null;
   // зоны мышц (доли габаритов от центра модели): fx,fy,fz
   var MUSCLES = [
@@ -97,21 +98,45 @@
     if (ny > 0.16) return front ? 'quads' : 'hams';
     return 'calves';
   }
-  function showHitMarker(pos, normal) {
+  function showHitMarker(pos, normal, mode) {
     var el = mv.querySelector('.vf-hit');
     if (!el) { el = document.createElement('div'); el.className = 'vf-hit'; el.slot = 'hotspot-hit'; el.innerHTML = '<i></i>'; mv.appendChild(el); }
     var p = pos.x.toFixed(3) + ' ' + pos.y.toFixed(3) + ' ' + pos.z.toFixed(3);
     var n = normal ? (normal.x.toFixed(2) + ' ' + normal.y.toFixed(2) + ' ' + normal.z.toFixed(2)) : '0 0 1';
     el.setAttribute('data-position', p); el.setAttribute('data-normal', n); el.setAttribute('data-visibility-attribute', 'visible');
+    el.classList.toggle('hover', mode === 'hover');
     try { mv.updateHotspot({ name: 'hotspot-hit', position: p, normal: n }); } catch (e) {}
-    el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse');
+    if (mode !== 'hover') { el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse'); }
+  }
+  // плавающая подпись выбранной мышцы (голубая) — поверх зала
+  function muscleLabelEl() {
+    var el = document.querySelector('.vf-mname');
+    if (!el) { el = document.createElement('div'); el.className = 'vf-mname'; document.body.appendChild(el); }
+    return el;
+  }
+  function showName(fine) {
+    var el = muscleLabelEl();
+    var tax = (window.MUSCLE_TAX && window.MUSCLE_TAX[fine]) || null;
+    el.textContent = tax ? tax.ru : fine;
+    el.classList.add('show');
+  }
+  function hideName() { var el = document.querySelector('.vf-mname'); if (el) el.classList.remove('show'); }
+  // превью при наведении/касании: подсветить точку голубым + показать имя мышцы
+  function previewHit(x, y) {
+    var hit = null; try { hit = mv.positionAndNormalFromPoint(x, y); } catch (e) {}
+    if (!hit || !hit.position) { hideName(); return null; }
+    var fine = muscleFromHit(hit.position, hit.normal);
+    showHitMarker(hit.position, hit.normal, 'hover');
+    showName(fine);
+    return fine;
   }
   function handleTap(e) {
     if (tapMode === 'open') { if (window.VF && window.VF.openMuscleLab) window.VF.openMuscleLab(); return; }
     var hit = null; try { hit = mv.positionAndNormalFromPoint(e.clientX, e.clientY); } catch (er) {}
     if (!hit || !hit.position) return;
     var fine = muscleFromHit(hit.position, hit.normal);
-    showHitMarker(hit.position, hit.normal);
+    showHitMarker(hit.position, hit.normal, 'select');
+    showName(fine);
     try { if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) window.Telegram.WebApp.HapticFeedback.impactOccurred('medium'); } catch (e2) {}
     if (window.VF && window.VF.muscleMenuFine) window.VF.muscleMenuFine(fine);
   }
@@ -120,13 +145,11 @@
     if (mv) return mv;
     mv = document.createElement('model-viewer');
     mv.setAttribute('camera-controls', '');
-    mv.setAttribute('auto-rotate', '');
-    mv.setAttribute('auto-rotate-delay', '0');
-    mv.setAttribute('rotation-per-second', '26deg');
-    mv.setAttribute('disable-zoom', '');
     mv.setAttribute('disable-pan', '');
     mv.setAttribute('interaction-prompt', 'none');
     mv.setAttribute('touch-action', 'pan-y');
+    mv.setAttribute('min-field-of-view', '10deg');   // зум-ин к мышце
+    mv.setAttribute('max-field-of-view', '45deg');
     mv.setAttribute('environment-image', 'neutral');
     mv.setAttribute('tone-mapping', 'neutral');
     mv.setAttribute('exposure', '0.42');
@@ -141,13 +164,23 @@
     mv.style.setProperty('--poster-color', 'transparent');
     mv.style.setProperty('--progress-bar-color', '#3FD3D8');
     mv.addEventListener('load', function () { mv.__scene = null; recolor(); applyMorph(); });
-    var _down = null;
-    mv.addEventListener('pointerdown', function (e) { _down = { x: e.clientX, y: e.clientY, t: Date.now() }; });
+    var _down = null, _prevT = 0;
+    function preview(e) {                       // throttled голубое превью под пальцем/курсором
+      if (tapMode !== 'select') return;
+      var now = Date.now(); if (now - _prevT < 55) return; _prevT = now;
+      previewHit(e.clientX, e.clientY);
+    }
+    mv.addEventListener('pointerdown', function (e) {
+      _down = { x: e.clientX, y: e.clientY, t: Date.now() };
+      if (tapMode === 'select') previewHit(e.clientX, e.clientY);   // мгновенная подсветка касания
+    });
+    mv.addEventListener('pointermove', preview);  // ховер мышью + «вождение» при вращении
     mv.addEventListener('pointerup', function (e) {
       if (!_down) return; var dx = Math.abs(e.clientX - _down.x), dy = Math.abs(e.clientY - _down.y), dt = Date.now() - _down.t; _down = null;
       if (dx > 9 || dy > 9 || dt > 600) return;  // это вращение/долгий тап, не тап по мышце
       handleTap(e);
     });
+    mv.addEventListener('pointerleave', function () { if (tapMode === 'select') hideName(); });
     return mv;
   }
 
@@ -158,6 +191,7 @@
     if (opts && opts.tapMode) tapMode = opts.tapMode;
     if (opts) for (var k in opts) { if (k !== 'tapMode') cur[k] = opts[k]; }
     var el = ensureMV();
+    if (tapMode === 'open') { var hm = el.querySelector('.vf-hit'); if (hm) hm.remove(); hideName(); }  // на «Доме» нет выбора — чистим подсветку/подпись
     var want = srcFor(cur.gender === 'f' ? 'f' : 'm');
     if (el.getAttribute('src') !== want) { el.setAttribute('src', want); el.__scene = null; }
     if (el.parentNode !== container) container.appendChild(el);

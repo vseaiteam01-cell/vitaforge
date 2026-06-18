@@ -168,14 +168,24 @@ function targets() {
   var carbs = Math.max(0, Math.round((kcal - protein * 4 - fat * 9) / 4));
   return { kcal: kcal, protein: protein, fat: fat, carbs: carbs, tdee: Math.round(tdee) };
 }
-function eatenToday() {
-  var list = S.meals[dayKey()] || [], t = { kcal: 0, protein: 0, fat: 0, carbs: 0, slots: {} };
+function eatenOn(key) {
+  var list = S.meals[key] || [], t = { kcal: 0, protein: 0, fat: 0, carbs: 0, slots: {} };
   list.forEach(function (m) { t.kcal += m.kcal; t.protein += m.p; t.fat += m.f; t.carbs += m.c; t.slots[m.slot] = true; });
   return t;
 }
+function eatenToday() { return eatenOn(dayKey()); }
 function slotByHour() { var h = new Date().getHours(); return h < 11 ? 'breakfast' : h < 16 ? 'lunch' : h < 21 ? 'dinner' : 'snack'; }
 var SLOT_SHARE = { breakfast: 0.25, lunch: 0.35, dinner: 0.30, snack: 0.10 };
 var SLOT_RU = { breakfast: 'Завтрак', lunch: 'Обед', dinner: 'Ужин', snack: 'Перекус' };
+var SLOT_EMOJI = { breakfast: '🍳', lunch: '🍲', dinner: '🍽️', snack: '🥪' };
+
+// ---------- Выбранная дата (дневник по дням) ----------
+var viewDate = dayKey();      // какой день показываем/ведём
+var mealSlot = slotByHour();  // выбранный приём пищи для генерации
+var calMonth = null;          // месяц, открытый в календаре (1-е число)
+function isToday(k) { return k === dayKey(); }
+function shiftDay(k, delta) { var d = parseKey(k); d.setDate(d.getDate() + delta); return dayKey(d); }
+function sessionsOn(key) { return S.sessions.filter(function (s) { return s.date === key; }); }
 
 function dietBlocks(diet) {
   if (diet === 'nodairy') return ['молок', 'творог', 'сыр', 'йогурт', 'кефир'];
@@ -190,15 +200,15 @@ function recipeAllowed(r) {
   r.ingredients.forEach(function (ing) { var low = ing.item.toLowerCase(); blocks.forEach(function (b) { if (low.indexOf(b) >= 0) bad = true; }); });
   return !bad;
 }
-function generateMeal(slot) {
-  slot = slot || slotByHour();
-  var tg2 = targets(), eaten = eatenToday();
+function generateMeal(slot, key) {
+  slot = slot || slotByHour(); key = key || viewDate;
+  var tg2 = targets(), eaten = eatenOn(key);
   var rem = { kcal: Math.max(0, tg2.kcal - eaten.kcal), p: Math.max(0, tg2.protein - eaten.protein), f: Math.max(0, tg2.fat - eaten.fat), c: Math.max(0, tg2.carbs - eaten.carbs) };
   var remShareSum = 0; Object.keys(SLOT_SHARE).forEach(function (sl) { if (!eaten.slots[sl]) remShareSum += SLOT_SHARE[sl]; });
   if (remShareSum <= 0) remShareSum = SLOT_SHARE[slot];
   var f2 = SLOT_SHARE[slot] / remShareSum;
   var slotK = Math.max(150, rem.kcal * f2), slotP = rem.p * f2, slotF = rem.f * f2, slotC = rem.c * f2;
-  var used = S.usedRecipes[dayKey()] || [];
+  var used = S.usedRecipes[key] || [];
   var cands = window.RECIPES.filter(function (r) { return r.meal === slot && recipeAllowed(r); });
   if (!cands.length) cands = window.RECIPES.filter(recipeAllowed);
   if (!cands.length) cands = window.RECIPES.slice();
@@ -781,25 +791,39 @@ function segBtn(id, cur2, label) { return '<button class="' + (cur2 === id ? 'on
 
 function renderFood() {
   refreshDailyQuests();
-  var tg2 = targets(), eaten = eatenToday();
+  var tg2 = targets(), eaten = eatenOn(viewDate);
   var kpct = eaten.kcal / tg2.kcal * 100;
-  var meals = S.meals[dayKey()] || [];
+  var meals = S.meals[viewDate] || [];
+  var sess = sessionsOn(viewDate);
+  var dayLbl = isToday(viewDate) ? 'сегодня' : 'в этот день';
   var h = '<div class="scr-head"><div><div class="eyebrow">Питание</div><h1>Рацион</h1></div>'
     + '<div class="streak" style="background:var(--accent-tint);border-color:var(--accent-line);color:var(--accent)">🥗 <span class="tnum">' + S.nutStreak.count + '</span> дн.</div></div>';
+  h += dateStripHtml();
   h += '<div class="card" style="text-align:center;padding-top:var(--sp-6)">' + ring(kpct, fmt(eaten.kcal), 'из ' + fmt(tg2.kcal) + ' ккал', 184);
   h += '<div class="macro-legend"><div class="m"><div class="ml"><span class="dot" style="background:#5EE6EA"></span>Белок</div><div class="mv tnum">' + Math.round(eaten.protein) + '/' + tg2.protein + 'г</div></div>'
     + '<div class="m"><div class="ml"><span class="dot" style="background:#46D6A0"></span>Углеводы</div><div class="mv tnum">' + Math.round(eaten.carbs) + '/' + tg2.carbs + 'г</div></div>'
     + '<div class="m"><div class="ml"><span class="dot" style="background:#F4B740"></span>Жиры</div><div class="mv tnum">' + Math.round(eaten.fat) + '/' + tg2.fat + 'г</div></div></div>';
   h += '<div style="color:var(--text-muted);font-size:var(--fs-sm);margin-top:14px">Осталось <b class="tnum" style="color:var(--accent)">' + fmt(Math.max(0, tg2.kcal - eaten.kcal)) + '</b> ккал · <b class="tnum">' + Math.max(0, tg2.protein - Math.round(eaten.protein)) + '</b>г белка</div>';
   h += '</div>';
-  h += '<button class="pill" onclick="VF.genDish()">🍽️ Сгенерируй блюдо на сегодня</button>';
+  h += '<div class="section-title">Добавить приём пищи</div>';
+  h += mealSlotChips();
+  h += '<div style="display:flex;gap:10px;margin-top:10px"><button class="pill" style="flex:1;margin:0" onclick="VF.genDish()">🍽️ Сгенерировать ' + SLOT_RU[mealSlot].toLowerCase() + '</button>'
+    + '<button class="pill ghost" style="flex:none;width:auto;margin:0;padding:0 18px" onclick="VF.manualMeal()">✏️ Вписать</button></div>';
   h += '<div id="dishSlot"></div>';
-  h += '<div class="section-title">Съедено сегодня</div>';
-  if (!meals.length) h += '<div class="empty">Пока ничего. Сгенерируй блюдо или добавь приём пищи.</div>';
+  h += '<div class="section-title">Съедено ' + dayLbl + '</div>';
+  if (!meals.length) h += '<div class="empty">Пока ничего. Сгенерируй блюдо или впиши калории.</div>';
   meals.forEach(function (m, i) {
-    h += '<div class="quest"><div class="qi">' + (m.emoji || '🍽️') + '</div><div><div class="qt">' + esc(m.name) + '</div>'
-      + '<div class="qs tnum">' + m.kcal + ' ккал · Б' + m.p + ' Ж' + m.f + ' У' + m.c + '</div></div>'
+    h += '<div class="quest"><div class="qi">' + (m.emoji || '🍽️') + '</div><div><div class="qt">' + esc(m.name) + (m.manual ? ' <span style="color:var(--text-faint);font-weight:600">· вручную</span>' : '') + '</div>'
+      + '<div class="qs tnum">' + (SLOT_RU[m.slot] ? SLOT_RU[m.slot] + ' · ' : '') + m.kcal + ' ккал · Б' + m.p + ' Ж' + m.f + ' У' + m.c + '</div></div>'
       + '<div class="qr" style="background:none;border:none;color:var(--text-faint);cursor:pointer" onclick="VF.delMeal(' + i + ')">✕</div></div>';
+  });
+  h += '<div class="section-title">Тренировки ' + dayLbl + '</div>';
+  if (!sess.length) h += '<div class="empty">В этот день тренировок не было.</div>';
+  sess.forEach(function (s) {
+    var nSets = (s.sets || []).length, prs = (s.sets || []).filter(function (x) { return x.pr; }).length;
+    h += '<div class="quest"><div class="qi">🏋️</div><div><div class="qt">' + esc(dayName(s.dayId)) + '</div>'
+      + '<div class="qs tnum">' + nSets + ' подходов' + (prs ? ' · 🏆 ' + prs + ' PR' : '') + ' · +' + (s.xp || 0) + ' XP</div></div>'
+      + '<div class="qr tnum">' + nSets + '</div></div>';
   });
   $('#screen-food').innerHTML = h;
 }
@@ -971,11 +995,11 @@ function lootRoll() {
 
 var lastDish = null;
 function genDish() {
-  var slot = slotByHour();
-  var d = generateMeal(slot);
+  var slot = mealSlot;
+  var d = generateMeal(slot, viewDate);
   lastDish = d;
   var r = d.r;
-  var h = '<div class="recipe" style="margin-top:14px"><div class="rh"><div class="remoji">' + (r.emoji || '🍽️') + '</div>'
+  var h = '<div class="recipe" style="margin-top:14px"><div class="rh"><div class="remoji">' + (r.emoji || SLOT_EMOJI[slot] || '🍽️') + '</div>'
     + '<div><div class="rname">' + esc(r.name) + '</div><div class="rmeta">' + SLOT_RU[slot] + ' · ' + r.timeMin + ' мин · порция ×' + d.scale.toFixed(1) + '</div></div></div>';
   h += '<div class="rmac"><div class="mc"><b class="tnum">' + d.kcal + '</b><span>ккал</span></div><div class="mc"><b class="tnum">' + d.p + '</b><span>белок</span></div>'
     + '<div class="mc"><b class="tnum">' + d.f + '</b><span>жиры</span></div><div class="mc"><b class="tnum">' + d.c + '</b><span>углев</span></div></div>';
@@ -990,20 +1014,89 @@ function genDish() {
 }
 function addDish() {
   if (!lastDish) return;
-  var k = dayKey();
+  var k = viewDate;
   if (!S.meals[k]) S.meals[k] = [];
-  S.meals[k].push({ name: lastDish.r.name, emoji: lastDish.r.emoji, kcal: lastDish.kcal, p: lastDish.p, f: lastDish.f, c: lastDish.c, slot: lastDish.slot });
+  S.meals[k].push({ name: lastDish.r.name, emoji: lastDish.r.emoji || SLOT_EMOJI[lastDish.slot], kcal: lastDish.kcal, p: lastDish.p, f: lastDish.f, c: lastDish.c, slot: lastDish.slot });
   if (!S.usedRecipes[k]) S.usedRecipes[k] = [];
   S.usedRecipes[k].push(lastDish.r.name);
   addXp(20, true);
-  var eaten = eatenToday(), tg2 = targets();
-  if (eaten.protein >= tg2.protein * 0.95) touchNutStreak();
+  if (isToday(k)) { var eaten = eatenToday(), tg2 = targets(); if (eaten.protein >= tg2.protein * 0.95) touchNutStreak(); }
+  lastDish = null;
   $('#dishSlot').innerHTML = '';
   save(); renderFood();
   hapNotify('success');
   toast('Добавлено · +20 XP', 'win');
 }
-function delMeal(i) { var k = dayKey(); if (S.meals[k]) { S.meals[k].splice(i, 1); save(); renderFood(); } }
+function delMeal(i) { var k = viewDate; if (S.meals[k]) { S.meals[k].splice(i, 1); save(); renderFood(); } }
+
+// ---------- Ручной ввод калорий (съеденное вне приложения) ----------
+function manualMeal() {
+  var h = '<div class="grab"></div><h3>✏️ Вписать калории</h3>'
+    + '<p class="hint" style="margin:-6px 0 14px">Своё блюдо или съеденное вне приложения. Обязательны только калории — макросы по желанию.</p>'
+    + '<div class="field"><label>Название</label><input id="mm_name" placeholder="напр. шаурма" value=""></div>'
+    + '<div class="slot-chips" id="mmSlots">' + ['breakfast', 'lunch', 'dinner', 'snack'].map(function (s) { return '<button class="' + (mealSlot === s ? 'on' : '') + '" data-s="' + s + '" onclick="VF.manualSlot(\'' + s + '\')">' + SLOT_EMOJI[s] + ' ' + SLOT_RU[s] + '</button>'; }).join('') + '</div>'
+    + '<div class="field-row"><div class="field"><label>Ккал *</label><input id="mm_k" type="number" inputmode="numeric" placeholder="0"></div>'
+    + '<div class="field"><label>Белок, г</label><input id="mm_p" type="number" inputmode="numeric" placeholder="0"></div></div>'
+    + '<div class="field-row"><div class="field"><label>Жиры, г</label><input id="mm_f" type="number" inputmode="numeric" placeholder="0"></div>'
+    + '<div class="field"><label>Углеводы, г</label><input id="mm_c" type="number" inputmode="numeric" placeholder="0"></div></div>'
+    + '<button class="pill" style="margin-top:8px" onclick="VF.saveManual()">Добавить в день</button>';
+  openModal(h);
+  manualSlotSel = mealSlot;
+}
+var manualSlotSel = null;
+function saveManual() {
+  var g = function (id) { var el = $('#' + id); return el ? el.value : ''; };
+  var k = +g('mm_k') || 0; if (k <= 0) { toast('Введи калории'); return; }
+  var slot = manualSlotSel || mealSlot, key = viewDate;
+  if (!S.meals[key]) S.meals[key] = [];
+  S.meals[key].push({ name: g('mm_name') || 'Своё блюдо', emoji: SLOT_EMOJI[slot] || '🍽️', kcal: Math.round(k), p: Math.round(+g('mm_p') || 0), f: Math.round(+g('mm_f') || 0), c: Math.round(+g('mm_c') || 0), slot: slot, manual: true });
+  addXp(10, true);
+  if (isToday(key)) { var eaten = eatenToday(), tg2 = targets(); if (eaten.protein >= tg2.protein * 0.95) touchNutStreak(); }
+  manualSlotSel = null;
+  save(); closeModal(); renderFood(); hapNotify('success'); toast('Записано · +10 XP', 'win');
+}
+
+// ---------- Календарь / дневник по дням ----------
+var CAL_MON = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+function dateStripHtml() {
+  var d = parseKey(viewDate), label = isToday(viewDate) ? 'Сегодня' : (WD[d.getDay()] + ', ' + ddmm(d));
+  return '<div class="datestrip">'
+    + '<button class="ds-nav" onclick="VF.prevDay()">‹</button>'
+    + '<button class="ds-cur" onclick="VF.openCalendar()"><span class="ds-d">' + label + '</span><span class="ds-cal">📅</span></button>'
+    + '<button class="ds-nav" ' + (isToday(viewDate) ? 'disabled' : '') + ' onclick="VF.nextDay()">›</button></div>';
+}
+function mealSlotChips() {
+  return '<div class="slot-chips">' + ['breakfast', 'lunch', 'dinner', 'snack'].map(function (s) {
+    return '<button class="' + (mealSlot === s ? 'on' : '') + '" onclick="VF.setMealSlot(\'' + s + '\')">' + SLOT_EMOJI[s] + ' ' + SLOT_RU[s] + '</button>';
+  }).join('') + '</div>';
+}
+function openCalendar() {
+  var d = parseKey(viewDate); calMonth = new Date(d.getFullYear(), d.getMonth(), 1);
+  renderCalendar();
+}
+function renderCalendar() {
+  var y = calMonth.getFullYear(), m = calMonth.getMonth();
+  var startDow = (new Date(y, m, 1).getDay() + 6) % 7;   // понедельник = 0
+  var dim = new Date(y, m + 1, 0).getDate(), today = dayKey();
+  var h = '<div class="grab"></div><div class="cal-head"><button class="ds-nav" onclick="VF.calNav(-1)">‹</button>'
+    + '<div class="cal-title">' + CAL_MON[m] + ' ' + y + '</div>'
+    + '<button class="ds-nav" onclick="VF.calNav(1)">›</button></div>';
+  h += '<div class="cal-grid cal-dow">' + ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'].map(function (w) { return '<span>' + w + '</span>'; }).join('') + '</div>';
+  h += '<div class="cal-grid">';
+  for (var i = 0; i < startDow; i++) h += '<span class="cal-cell empty"></span>';
+  for (var dn = 1; dn <= dim; dn++) {
+    var key = y + '-' + ('0' + (m + 1)).slice(-2) + '-' + ('0' + dn).slice(-2);
+    var hasW = sessionsOn(key).length > 0, hasM = (S.meals[key] && S.meals[key].length > 0), future = key > today;
+    var cls = 'cal-cell' + (key === viewDate ? ' sel' : '') + (key === today ? ' today' : '') + (future ? ' future' : '');
+    h += '<button class="' + cls + '" ' + (future ? 'disabled' : '') + ' onclick="VF.pickDay(\'' + key + '\')">' + dn
+      + '<span class="cal-dots">' + (hasW ? '<i class="w"></i>' : '') + (hasM ? '<i class="m"></i>' : '') + '</span></button>';
+  }
+  h += '</div>';
+  h += '<div class="cal-legend"><span><i class="w"></i>тренировка</span><span><i class="m"></i>питание</span></div>';
+  h += '<button class="pill ghost sm" style="margin-top:12px" onclick="VF.today()">К сегодня</button>';
+  openModal(h);
+}
+function dayName(dayId) { var n = 'Тренировка'; S.program.days.forEach(function (d) { if (d.id === dayId) n = d.name; }); return n.replace(/^День \d+ — /, ''); }
 
 // ---------- Onboarding ----------
 var onbStep = 0, onbData = null;
@@ -1134,6 +1227,7 @@ function burst() {
 var cur = 'home';
 function go(tab) {
   cur = tab;
+  if (tab === 'food') { viewDate = dayKey(); mealSlot = slotByHour(); }   // еда всегда открывается на сегодня
   $all('.screen').forEach(function (s) { s.classList.remove('active'); });
   $('#screen-' + tab).classList.add('active');
   $all('.tab').forEach(function (t) { t.classList.toggle('active', t.getAttribute('data-tab') === tab); });
@@ -1160,6 +1254,14 @@ window.VF = {
   stopRest: stopRest, addRest: function () { _restLeft += 15; haptic('light'); },
   logSet: logSet, finishWorkout: finishWorkout,
   genDish: genDish, addDish: addDish, delMeal: delMeal,
+  setMealSlot: function (s) { mealSlot = s; hapSelect(); renderFood(); },
+  manualMeal: manualMeal, saveManual: saveManual,
+  manualSlot: function (s) { manualSlotSel = s; hapSelect(); $all('#mmSlots button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-s') === s); }); },
+  openCalendar: openCalendar, calNav: function (d) { calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() + d, 1); renderCalendar(); },
+  pickDay: function (k) { viewDate = k; mealSlot = isToday(k) ? slotByHour() : 'breakfast'; haptic('light'); closeModal(); renderFood(); },
+  prevDay: function () { viewDate = shiftDay(viewDate, -1); if (!isToday(viewDate)) mealSlot = 'breakfast'; hapSelect(); renderFood(); },
+  nextDay: function () { if (isToday(viewDate)) return; viewDate = shiftDay(viewDate, 1); if (isToday(viewDate)) mealSlot = slotByHour(); hapSelect(); renderFood(); },
+  today: function () { viewDate = dayKey(); mealSlot = slotByHour(); haptic('light'); closeModal(); renderFood(); },
   onbSet: onbSet, onbNext: onbNext, onbBack: onbBack,
   editProfile: editProfile, saveProfile: saveProfile, editBody: editBody, saveBody: saveBody,
   uploadDoc: uploadDoc, openLink: openLink, reset: reset,
