@@ -6,6 +6,7 @@
    ============================================================ */
 (function () {
   var cur = { gender: 'm', muscle: 0, fat: 0.45 };
+  var tapMode = 'open';   // 'open' = тап открывает полноэкранный зал мышц; 'select' = тап выбирает мышцу
   var URLS = { m: 'assets/adam.glb?v=3', f: 'assets/eve.glb?v=1' };
   var mv = null;
   // зоны мышц (доли габаритов от центра модели): fx,fy,fz
@@ -106,6 +107,7 @@
     el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse');
   }
   function handleTap(e) {
+    if (tapMode === 'open') { if (window.VF && window.VF.openMuscleLab) window.VF.openMuscleLab(); return; }
     var hit = null; try { hit = mv.positionAndNormalFromPoint(e.clientX, e.clientY); } catch (er) {}
     if (!hit || !hit.position) return;
     var fine = muscleFromHit(hit.position, hit.normal);
@@ -153,7 +155,8 @@
 
   function mount(container, opts) {
     if (!container) return;
-    if (opts) for (var k in opts) cur[k] = opts[k];
+    if (opts && opts.tapMode) tapMode = opts.tapMode;
+    if (opts) for (var k in opts) { if (k !== 'tapMode') cur[k] = opts[k]; }
     var el = ensureMV();
     var want = srcFor(cur.gender === 'f' ? 'f' : 'm');
     if (el.getAttribute('src') !== want) { el.setAttribute('src', want); el.__scene = null; }

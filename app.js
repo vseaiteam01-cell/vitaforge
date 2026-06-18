@@ -688,7 +688,7 @@ function renderHome() {
     h += '<div class="mm-legend"><span><i class="d charged"></i>заряжена</span><span><i class="d mid"></i>восст.</span><span><i class="d low"></i>устала</span></div>';
   }
   h += '<div class="hero-name">' + esc(sd.title) + '</div>';
-  h += '<div class="hero-sub">👆 Тапни мышцу на фигуре → её упражнения и травмы</div>';
+  h += '<div class="hero-sub">👆 Тапни фигуру → карта мышц на весь экран</div>';
   h += '<div class="level-line"><div class="level-disc"><b class="tnum">' + li.level + '</b></div>'
     + '<div class="xpbar"><div class="meta"><span>Уровень ' + li.level + '</span><span><b class="tnum">' + fmt(li.into) + '</b> / ' + fmt(li.need) + ' XP</span></div>'
     + '<div class="track"><div class="fill" style="width:' + li.pct + '%"></div></div></div></div>';
@@ -708,9 +708,19 @@ function renderHome() {
       + '<div><div class="qt">' + esc(q.t) + '</div></div><div class="qr">+' + q.xp + ' XP</div></div>';
   });
   $('#screen-home').innerHTML = h;
-  if (hv === '3d') { if (window.mountAvatar) window.mountAvatar($('#avatar'), avatarParams()); }
+  if (hv === '3d') { if (window.mountAvatar) window.mountAvatar($('#avatar'), Object.assign(avatarParams(), { tapMode: 'open' })); }
   else { mountMuscleMap(); }
 }
+function openMuscleLab() {
+  var lab = $('#muscleLab'); if (!lab) return;
+  lab.innerHTML = '<div class="mlab-head"><button class="mlab-x" onclick="VF.closeMuscleLab()">‹ Назад</button><div class="mlab-title">Карта мышц</div><div style="width:64px"></div></div>'
+    + '<div class="mlab-stage" id="mlabStage"></div>'
+    + '<div class="mlab-hint">Покрути фигуру пальцем и тапни мышцу — покажу упражнения и восстановление</div>';
+  lab.classList.add('show');
+  if (window.mountAvatar) window.mountAvatar($('#mlabStage'), Object.assign(avatarParams(), { tapMode: 'select' }));
+  haptic('light');
+}
+function closeMuscleLab() { var lab = $('#muscleLab'); if (lab) lab.classList.remove('show'); renderHome(); }
 renderHome.view = '3d';
 function avatarParams() {
   var st = computeStage();
@@ -1157,6 +1167,8 @@ window.VF = {
   muscleExFine: function (f) { var rd = recommendDay(); openExPicker(rd && rd.day ? rd.day.id : 'day1', f); },
   clearMuscle: function () { renderGym.muscle = null; renderGym(); },
   heroView: function (v) { renderHome.view = v; haptic('light'); renderHome(); },
+  openMuscleLab: function () { openMuscleLab(); },
+  closeMuscleLab: function () { closeMuscleLab(); },
   addEx: function (dayId) { openExPicker(dayId, 'chest'); },
   swapEx: function (id) { swapEx(id); },
   removeEx: function (id) { removeEx(id); },
