@@ -503,6 +503,22 @@ function removeEx(exId) {
   }
   removeFromStack(exId); haptic('medium'); renderGym(); toast('Удалено из стека');
 }
+// slug пути карты -> тонкая мышца
+var _slug2fine = null;
+function fineOfSlug(slug) {
+  if (!_slug2fine) { _slug2fine = {}; var T = window.MUSCLE_TAX || {}; Object.keys(T).forEach(function (f) { (T[f].svg || []).forEach(function (s) { if (!_slug2fine[s]) _slug2fine[s] = f; }); }); }
+  return _slug2fine[slug] || null;
+}
+// меню КОНКРЕТНОЙ мышцы (тап по карте)
+function muscleMenuFine(fine) {
+  var grp = groupOfFine(fine), cnt = (LIB.byMuscle[fine] || []).length;
+  var h = '<div class="grab"></div><h3>' + esc(fineRu(fine)) + '</h3>'
+    + '<p class="hint" style="margin:-6px 0 14px">Конкретно эта мышца · ' + cnt + ' упражнений в базе</p>'
+    + '<div style="display:grid;gap:10px">'
+    + '<button class="pill" onclick="VF.muscleExFine(\'' + fine + '\')">💪 Упражнения на «' + esc(fineRu(fine)) + '»</button>'
+    + '<button class="pill ghost" onclick="VF.muscleInjury(\'' + grp + '\')">🩹 Травма / восстановление</button></div>';
+  openModal(h);
+}
 function exForMuscle(id) { return allEx().filter(function (o) { return muscleOf(o.ex.id) === id; }); }
 function muscleMenu(id) {
   var info = MUSCLE_INFO[id] || { name: 'Мышца' };
@@ -575,7 +591,7 @@ function mountMuscleMap() {
     wrap._bound = true;
     wrap.addEventListener('click', function (e) {
       var p = e.target.closest ? e.target.closest('path.m-mus') : null;
-      if (p) { haptic('light'); window.VF.muscleMenu(p.getAttribute('data-group')); }
+      if (p) { haptic('light'); var fine = fineOfSlug(p.getAttribute('data-slug')); if (fine) muscleMenuFine(fine); else window.VF.muscleMenu(p.getAttribute('data-group')); }
     });
   }
 }
@@ -1102,6 +1118,7 @@ window.VF = {
   editProfile: editProfile, saveProfile: saveProfile, editBody: editBody, saveBody: saveBody,
   uploadDoc: uploadDoc, openLink: openLink, reset: reset,
   muscleMenu: muscleMenu, muscleExercises: muscleExercises, muscleInjury: muscleInjury,
+  muscleExFine: function (f) { var rd = recommendDay(); openExPicker(rd && rd.day ? rd.day.id : 'day1', f); },
   clearMuscle: function () { renderGym.muscle = null; renderGym(); },
   heroView: function (v) { renderHome.view = v; haptic('light'); renderHome(); },
   addEx: function (dayId) { openExPicker(dayId, 'chest'); },
