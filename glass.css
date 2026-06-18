@@ -187,3 +187,61 @@ body::before {
 @media (prefers-reduced-motion: reduce) {
   body::before, .hero-card::after { animation: none; }
 }
+
+/* ============================================================
+   «Все ИИ» BRAND ALIGNMENT (overrides — premium liquid glass)
+   ============================================================ */
+:root {
+  --bg-base: #0F0F10;
+  --bg-gradient:
+    radial-gradient(1200px 700px at 75% -10%, rgba(112,245,230,0.07), transparent 65%),
+    radial-gradient(900px 600px at 10% 110%, rgba(143,109,255,0.06), transparent 60%),
+    #0F0F10;
+  --accent: #54C4CE;
+  --accent-bright: #70F5E6;
+  --accent-deep: #2F9AA6;
+  --accent-line: rgba(84,196,206,0.45);
+  --accent-tint: rgba(84,196,206,0.12);
+  --accent-grad: linear-gradient(135deg, #70F5E6 0%, #54C4CE 50%, #2F9AA6 100%);
+  --accent-grad-soft: linear-gradient(135deg, rgba(112,245,230,0.16), rgba(47,154,166,0.10));
+  --glow-edge-cyan: 0 0 0 1px rgba(84,196,206,0.45), 0 0 22px rgba(84,196,206,0.30);
+  --glow-cyan-sm: 0 0 14px rgba(84,196,206,0.35);
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  --glass-tint: rgba(255,255,255,0.05);
+  --glass-tint-light: rgba(255,255,255,0.10);
+  --glass-tint-strong: rgba(18,18,20,0.84);
+  --glass-edge: rgba(255,255,255,0.12);
+  --glass-edge-hi: rgba(255,255,255,0.28);
+}
+body { background-color: #0F0F10; background-image: var(--bg-gradient); }
+body::before {
+  background:
+    radial-gradient(38% 30% at 78% 12%, rgba(112,245,230,0.09), transparent 60%),
+    radial-gradient(42% 34% at 14% 88%, rgba(143,109,255,0.10), transparent 62%);
+}
+/* premium liquid-glass card per Все ИИ recipe */
+.glass-card, .hero-card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.10) 0%, rgba(255,255,255,0.04) 100%);
+  border: 1px solid rgba(255,255,255,0.16);
+  -webkit-backdrop-filter: blur(40px) saturate(1.3); backdrop-filter: blur(40px) saturate(1.3);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 24px 60px -20px rgba(0,0,0,0.55), 0 2px 6px rgba(0,0,0,0.3);
+  isolation: isolate;
+}
+.glass-card::before, .hero-card::before {
+  content: ''; position: absolute; inset: 0 0 auto 0; height: 1px; z-index: 3; pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.18) 25%, rgba(255,255,255,0.30) 50%, rgba(255,255,255,0.18) 75%, transparent);
+}
+/* JetBrains Mono для eyebrow / meta / лейблов / чисел-чипов */
+.eyebrow, .section-title, .tile .lbl, .krow .k, .mm-legend, .lift-badge .nm, .quest .qr, .seg button, .rest-timer .rt-lbl {
+  font-family: var(--font-mono);
+}
+
+/* ===== spring physics / tactile press ===== */
+:root { --spring-snap: cubic-bezier(0.34, 1.56, 0.64, 1); }
+.tabbar::before { transition: transform var(--dur-base) var(--spring-snap); }
+.setdot { transition: transform .28s var(--spring-snap), background .2s, box-shadow .2s; }
+.setdot.done { animation: vf-pop .34s var(--spring-snap); }
+@keyframes vf-pop { 0% { transform: scale(.65); } 60% { transform: scale(1.18); } 100% { transform: scale(1); } }
+.quest:active, .ex:active, .recipe:active, .tile:active, .opt:active { transform: scale(.975); transition: transform var(--dur-press); }
+.rpe button, .btn-chip { transition: transform var(--dur-press) var(--spring-snap), background var(--dur-fast), box-shadow var(--dur-fast); }
+.rpe button:active, .btn-chip:active { transform: scale(.9); }

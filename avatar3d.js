@@ -6,7 +6,7 @@
    ============================================================ */
 (function () {
   var cur = { gender: 'm', muscle: 0, fat: 0.45 };
-  var URLS = { m: 'assets/adam.glb?v=2', f: 'assets/eve.glb?v=1' };
+  var URLS = { m: 'assets/adam.glb?v=3', f: 'assets/eve.glb?v=1' };
   var mv = null;
   // зоны мышц (доли габаритов от центра модели): fx,fy,fz
   var MUSCLES = [

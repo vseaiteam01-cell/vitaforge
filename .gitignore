@@ -25,3 +25,6 @@ Thumbs.db
 # source/reference images (runtime needs only .glb)
 assets/*_src.jpg
 assets/stage*.png
+
+assets/*_backup.glb
+assets/ecorche_src.jpg

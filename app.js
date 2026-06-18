@@ -7,8 +7,34 @@
 
 // ---------- Telegram ----------
 var tg = window.Telegram && window.Telegram.WebApp;
-try { if (tg) { tg.ready(); tg.expand(); if (tg.setHeaderColor) tg.setHeaderColor('#1B1E27'); if (tg.setBackgroundColor) tg.setBackgroundColor('#1B1E27'); } } catch (e) {}
+try { if (tg) { tg.ready(); tg.expand(); if (tg.setHeaderColor) tg.setHeaderColor('#0F0F10'); if (tg.setBackgroundColor) tg.setBackgroundColor('#0F0F10'); } } catch (e) {}
 function haptic(t) { try { if (tg && tg.HapticFeedback) tg.HapticFeedback.impactOccurred(t || 'light'); } catch (e) {} }
+function hapNotify(t) { try { if (tg && tg.HapticFeedback) tg.HapticFeedback.notificationOccurred(t || 'success'); } catch (e) {} }
+function hapSelect() { try { if (tg && tg.HapticFeedback) tg.HapticFeedback.selectionChanged(); } catch (e) {} }
+// плавный count-up чисел
+function countUp(el, to, dur, fmtFn) {
+  if (!el) return; dur = dur || 700; var from = parseFloat((el.getAttribute('data-cv') || '0')) || 0;
+  var t0 = null; fmtFn = fmtFn || function (v) { return fmt(v); };
+  function step(ts) { if (!t0) t0 = ts; var p = Math.min((ts - t0) / dur, 1); var e = 1 - Math.pow(1 - p, 3); var v = from + (to - from) * e; el.textContent = fmtFn(v); if (p < 1) requestAnimationFrame(step); else el.setAttribute('data-cv', to); }
+  requestAnimationFrame(step);
+}
+// rest-таймер (плавающая стеклянная пилюля)
+var _restT = null, _restLeft = 0;
+function startRest(sec) {
+  sec = sec || 90; _restLeft = sec; var el = $('#restTimer'); if (!el) return;
+  function paint() {
+    var m = Math.floor(_restLeft / 60), s = _restLeft % 60;
+    el.innerHTML = '<button class="rt-x" onclick="VF.stopRest()">✕</button>'
+      + '<div><div class="rt-lbl">Отдых</div><div class="rt-time tnum">' + m + ':' + ('0' + s).slice(-2) + '</div></div>'
+      + '<button class="rt-add" onclick="VF.addRest()">+15с</button>';
+  }
+  paint(); el.classList.add('show'); clearInterval(_restT);
+  _restT = setInterval(function () {
+    _restLeft--; if (_restLeft <= 0) { clearInterval(_restT); hapNotify('success'); toast('⏱ Отдых окончен — следующий подход!', 'win'); stopRest(); return; }
+    paint();
+  }, 1000);
+}
+function stopRest() { clearInterval(_restT); var el = $('#restTimer'); if (el) el.classList.remove('show'); }
 
 // ---------- DOM helpers ----------
 function $(s, r) { return (r || document).querySelector(s); }
@@ -646,9 +672,10 @@ function logSet() {
   var isPr = cur > best;
   var xp = setXpPreview();
   draft.sets.push({ exId: e.id, weight: draft.w, reps: draft.reps, rpe: draft.rpe, pr: isPr, xp: xp });
-  if (isPr) { S.bestE1RM[e.id] = cur; e.weight = Math.max(e.weight, draft.w); toast('🏆 Новый PR! ' + e.name, 'win'); burst(); haptic('medium'); }
+  if (isPr) { S.bestE1RM[e.id] = cur; e.weight = Math.max(e.weight, draft.w); toast('🏆 Новый PR! ' + e.name, 'pr'); burst(); haptic('rigid'); hapNotify('success'); }
+  else { haptic('medium'); }
   addXp(xp);
-  haptic('light');
+  startRest(90);
   save(); drawLogger();
 }
 function finishWorkout(dayId) {
@@ -666,6 +693,8 @@ function finishWorkout(dayId) {
   draft = null; sessionBuf = [];
   save();
   closeModal();
+  stopRest();
+  hapNotify('success');
   toast('✅ +' + fmt(sessXp + bonus) + ' XP · ' + loot.txt, 'win');
   burst();
   go('home');
@@ -709,6 +738,7 @@ function addDish() {
   if (eaten.protein >= tg2.protein * 0.95) touchNutStreak();
   $('#dishSlot').innerHTML = '';
   save(); renderFood();
+  hapNotify('success');
   toast('Добавлено · +20 XP', 'win');
 }
 function delMeal(i) { var k = dayKey(); if (S.meals[k]) { S.meals[k].splice(i, 1); save(); renderFood(); } }
@@ -863,8 +893,9 @@ function gymSeg(id) { renderGym.seg = id; renderGym(); }
 // ---------- Public API ----------
 window.VF = {
   go: go, gymSeg: gymSeg, openLogger: openLogger, closeModal: closeModal,
-  step: function (f, d) { draft[f] = Math.max(f === 'reps' ? 1 : 0, (draft[f] || 0) + d); draft[f] = Math.round(draft[f] * 10) / 10; drawLogger(); },
-  setRpe: function (v) { draft.rpe = v; drawLogger(); },
+  step: function (f, d) { draft[f] = Math.max(f === 'reps' ? 1 : 0, (draft[f] || 0) + d); draft[f] = Math.round(draft[f] * 10) / 10; hapSelect(); drawLogger(); },
+  setRpe: function (v) { draft.rpe = v; hapSelect(); drawLogger(); },
+  stopRest: stopRest, addRest: function () { _restLeft += 15; haptic('light'); },
   logSet: logSet, finishWorkout: finishWorkout,
   genDish: genDish, addDish: addDish, delMeal: delMeal,
   onbSet: onbSet, onbNext: onbNext, onbBack: onbBack,
