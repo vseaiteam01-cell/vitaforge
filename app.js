@@ -626,10 +626,33 @@ function renderHero() {
 // ============================================================
 var draft = null;
 var sessionBuf = [];
+// мини-силуэт фронт с подсвеченной рабочей группой
+function miniMuscleSvg(group) {
+  var data = window.MUSCLE_SVG && window.MUSCLE_SVG.front;
+  if (!data) return '';
+  var paths = data.muscles.map(function (m) {
+    if (m.group === 'base') return '<path d="' + m.d + '" fill="#23272f" opacity="0.4"/>';
+    var lit = m.group === group;
+    return '<path d="' + m.d + '" fill="' + (lit ? '#54C4CE' : '#2b3140') + '"' + (lit ? ' style="filter:drop-shadow(0 0 4px rgba(84,196,206,.85))"' : '') + '/>';
+  }).join('');
+  return '<svg class="mini-muscle" viewBox="30 215 670 1150" preserveAspectRatio="xMidYMid meet">' + paths + '</svg>';
+}
+// демо выполнения (кросс-фейд старт↔конец) + подсветка мышцы
+function exDemoHtml(exId) {
+  var im = window.EX_IMAGES && window.EX_IMAGES[exId];
+  var group = muscleOf(exId);
+  if (!im || !im.images || !im.images.length) return '';
+  var demo = '<div class="ed-anim"><img src="' + im.images[0] + '" alt="" loading="lazy">'
+    + (im.images[1] ? '<img class="f2" src="' + im.images[1] + '" alt="" loading="lazy">' : '') + '</div>';
+  var cap = (MUSCLE_INFO[group] ? MUSCLE_INFO[group].name : '');
+  return '<div class="ex-demo glass-card">' + demo
+    + '<div class="ed-mus">' + miniMuscleSvg(group) + '<div class="ed-cap">' + esc(cap) + '</div></div></div>';
+}
 function _openLogger(exId) {
   var o = exById(exId); if (!o) return; var e = o.ex;
   if (!draft || draft.exId !== exId) draft = { exId: exId, w: e.weight, reps: e.range ? e.range[1] : e.reps, rpe: 8, sets: [] };
   var h = '<div class="grab"></div><h3>' + esc(e.name) + '</h3>';
+  h += exDemoHtml(exId);
   h += '<div class="setdots" id="setdots"></div>';
   h += '<div style="display:flex;gap:12px;margin:18px 0 8px"><div style="flex:1"><div class="lbl" style="color:var(--text-muted);font-size:var(--fs-label);text-transform:uppercase;letter-spacing:var(--tracking-label);font-weight:700;margin-bottom:6px">Вес</div>'
     + stepperHtml('w', draft.w, e.inc || 2.5) + '</div>'

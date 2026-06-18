@@ -28,3 +28,5 @@ assets/stage*.png
 
 assets/*_backup.glb
 assets/ecorche_src.jpg
+assets/freeex.json
+assets/build_eximg.py
