@@ -170,6 +170,8 @@ body::before {
 .modal .grab { background: var(--glass-edge-hi); }
 
 /* ===== MUSCLE MAP (SVG, per-muscle highlight + recovery heat) ===== */
+.hero-card.mode-mus { padding-top: var(--sp-5); }
+.hero-card.mode-mus .mmap { max-height: 300px; }
 .mmap-wrap { display: flex; gap: 6px; justify-content: center; align-items: flex-start; margin: 6px 0 12px; }
 .mmap { width: 50%; height: auto; max-height: 46vh; display: block; }
 .m-base { fill: #262b36; opacity: .42; }

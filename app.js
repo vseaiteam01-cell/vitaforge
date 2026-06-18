@@ -457,17 +457,24 @@ function renderHome() {
   var h = '';
   h += '<div class="scr-head"><div><div class="eyebrow">VITA<b style="color:var(--accent)">FORGE</b></div><h1>' + esc(p.name) + '</h1></div>'
     + '<div class="streak"><span class="fl">🔥</span><span class="tnum">' + S.streak.count + '</span> дн.</div></div>';
-  h += '<div class="hero"><div class="hero-card">';
-  h += '<div class="lift-badge l"><div class="nm">Жим</div><div class="lvl">Lv ' + (b1 ? liftLevel(b1.ex) : 1) + '</div><div class="wt tnum">' + (b1 ? b1.ex.weight : '–') + 'кг</div></div>';
-  h += '<div class="lift-badge r"><div class="nm">Ноги</div><div class="lvl">Lv ' + (b2 ? liftLevel(b2.ex) : 1) + '</div><div class="wt tnum">' + (b2 ? b2.ex.weight : '–') + 'кг</div></div>';
-  h += '<div class="avatar" id="avatar"></div>';
-  h += '<div class="stage-tag">Стадия ' + st + ' · ' + esc(sd.title) + '</div>';
+  var hv = renderHome.view || '3d';
+  h += '<div class="hero"><div class="hero-card' + (hv === 'muscles' ? ' mode-mus' : '') + '">';
+  if (hv === '3d') {
+    h += '<div class="lift-badge l"><div class="nm">Жим</div><div class="lvl">Lv ' + (b1 ? liftLevel(b1.ex) : 1) + '</div><div class="wt tnum">' + (b1 ? b1.ex.weight : '–') + 'кг</div></div>';
+    h += '<div class="lift-badge r"><div class="nm">Ноги</div><div class="lvl">Lv ' + (b2 ? liftLevel(b2.ex) : 1) + '</div><div class="wt tnum">' + (b2 ? b2.ex.weight : '–') + 'кг</div></div>';
+    h += '<div class="avatar" id="avatar"></div>';
+    h += '<div class="stage-tag">Стадия ' + st + ' · ' + esc(sd.title) + '</div>';
+  } else {
+    h += '<div id="mmWrap" class="mmap-wrap">' + svgFor('front') + svgFor('back') + '</div>';
+    h += '<div class="mm-legend"><span><i class="d charged"></i>заряжена</span><span><i class="d mid"></i>восст.</span><span><i class="d low"></i>устала</span></div>';
+  }
   h += '<div class="hero-name">' + esc(sd.title) + '</div>';
-  h += '<div class="hero-sub">' + esc((sd.bodyFatRange || '').split('—')[0]) + '</div>';
+  h += '<div class="hero-sub">' + (hv === 'muscles' ? '👆 тапни мышцу → упражнения и восстановление' : esc((sd.bodyFatRange || '').split('—')[0])) + '</div>';
   h += '<div class="level-line"><div class="level-disc"><b class="tnum">' + li.level + '</b></div>'
     + '<div class="xpbar"><div class="meta"><span>Уровень ' + li.level + '</span><span><b class="tnum">' + fmt(li.into) + '</b> / ' + fmt(li.need) + ' XP</span></div>'
     + '<div class="track"><div class="fill" style="width:' + li.pct + '%"></div></div></div></div>';
   h += '</div></div>';
+  h += '<div class="seg" style="margin-top:14px"><button class="' + (hv === '3d' ? 'on' : '') + '" onclick="VF.heroView(\'3d\')">🧍 Аватар</button><button class="' + (hv === 'muscles' ? 'on' : '') + '" onclick="VF.heroView(\'muscles\')">🫀 Мышцы</button></div>';
   h += '<div class="row2" style="margin-top:var(--sp-5)">';
   h += '<div class="card" style="margin:0"><div class="eyebrow" style="color:var(--text-muted)">Тренировка дня</div>'
     + '<div style="color:var(--text-hi);font-weight:800;font-size:var(--fs-h3);margin:6px 0 2px">' + esc(rec.day.name.replace(/^День \d+ — /, '')) + '</div>'
@@ -483,8 +490,10 @@ function renderHome() {
       + '<div><div class="qt">' + esc(q.t) + '</div></div><div class="qr">+' + q.xp + ' XP</div></div>';
   });
   $('#screen-home').innerHTML = h;
-  if (window.mountAvatar) window.mountAvatar($('#avatar'), avatarParams());
+  if (hv === '3d') { if (window.mountAvatar) window.mountAvatar($('#avatar'), avatarParams()); }
+  else { mountMuscleMap(); }
 }
+renderHome.view = '3d';
 function avatarParams() {
   var st = computeStage();
   var muscle = clamp((st - 1) / 5, 0, 1);
@@ -925,7 +934,8 @@ window.VF = {
   editProfile: editProfile, saveProfile: saveProfile, editBody: editBody, saveBody: saveBody,
   uploadDoc: uploadDoc, openLink: openLink, reset: reset,
   muscleMenu: muscleMenu, muscleExercises: muscleExercises, muscleInjury: muscleInjury,
-  clearMuscle: function () { renderGym.muscle = null; renderGym(); }
+  clearMuscle: function () { renderGym.muscle = null; renderGym(); },
+  heroView: function (v) { renderHome.view = v; haptic('light'); renderHome(); }
 };
 
 // ---------- Boot ----------
