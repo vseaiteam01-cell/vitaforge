@@ -8,6 +8,13 @@ bot/.env
 _v1-classic/
 _design_ref.json
 *_ref.json
+build_data.py
+assets/_mm*.svg
+assets/body*.ts
+assets/body*.cjs
+assets/*_src.txt
+assets/idx.txt
+assets/build_muscles.js
 extract.py
 snap_server.py
 avatar_snap.jpg

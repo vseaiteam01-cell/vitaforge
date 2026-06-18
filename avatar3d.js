@@ -103,7 +103,7 @@
     mv.style.background = 'transparent';
     mv.style.setProperty('--poster-color', 'transparent');
     mv.style.setProperty('--progress-bar-color', '#3FD3D8');
-    mv.addEventListener('load', function () { mv.__scene = null; recolor(); applyMorph(); buildHotspots(); });
+    mv.addEventListener('load', function () { mv.__scene = null; recolor(); applyMorph(); });
     return mv;
   }
 

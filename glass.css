@@ -169,6 +169,21 @@ body::before {
 }
 .modal .grab { background: var(--glass-edge-hi); }
 
+/* ===== MUSCLE MAP (SVG, per-muscle highlight + recovery heat) ===== */
+.mmap-wrap { display: flex; gap: 6px; justify-content: center; align-items: flex-start; margin: 6px 0 12px; }
+.mmap { width: 50%; height: auto; max-height: 46vh; display: block; }
+.m-base { fill: #262b36; opacity: .42; }
+.m-mus { fill: #2c333f; fill: color-mix(in srgb, var(--accent) calc(var(--rec, 0) * 1%), #2b3140);
+  stroke: rgba(255,255,255,.05); stroke-width: 1; cursor: pointer; transition: fill .3s var(--ease-out), filter .25s; }
+.m-mus.charged { filter: drop-shadow(0 0 4px rgba(63,211,216,.6)); }
+.m-mus:active { filter: drop-shadow(0 0 9px rgba(63,211,216,.95)); }
+.mm-legend { display: flex; justify-content: center; gap: 16px; margin: 2px 0 8px; }
+.mm-legend span { display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: var(--fs-sm); }
+.mm-legend .d { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+.mm-legend .d.charged { background: var(--accent); box-shadow: 0 0 6px rgba(63,211,216,.7); }
+.mm-legend .d.mid { background: #3a6b73; }
+.mm-legend .d.low { background: #2c333f; }
+
 @media (prefers-reduced-motion: reduce) {
   body::before, .hero-card::after { animation: none; }
 }

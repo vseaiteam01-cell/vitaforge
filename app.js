@@ -346,6 +346,57 @@ function renderGymMuscle(id) {
   $('#screen-gym').innerHTML = h;
 }
 
+// ---------- Muscle map (SVG, per-muscle highlight + recovery «заряд») ----------
+var RECOVERY_DAYS = { chest: 3.5, back: 3.5, shoulders: 3, arms: 2.5, abs: 2, legs: 4 };
+function groupLastTrained(group) {
+  var last = null;
+  S.sessions.forEach(function (s) {
+    (s.sets || []).forEach(function (st) {
+      if (muscleOf(st.exId) === group) { var d = parseKey(s.date); if (!last || d > last) last = d; }
+    });
+  });
+  return last;
+}
+function groupRecovery(group) {            // 1 = полностью восстановлена/заряжена, 0 = только что нагружена
+  var last = groupLastTrained(group);
+  if (!last) return 1;
+  var days = (new Date() - last) / 86400000;
+  return clamp(days / (RECOVERY_DAYS[group] || 3.5), 0, 1);
+}
+function svgFor(side) {
+  var data = window.MUSCLE_SVG && window.MUSCLE_SVG[side];
+  if (!data) return '';
+  var paths = data.muscles.map(function (m) {
+    if (m.group === 'base') return '<path class="m-base" d="' + m.d + '"/>';
+    var rec = Math.round(groupRecovery(m.group) * 100);
+    return '<path class="m-mus' + (rec >= 88 ? ' charged' : '') + '" data-group="' + m.group + '" style="--rec:' + rec + '" d="' + m.d + '"/>';
+  }).join('');
+  return '<svg id="mm-' + side + '" class="mmap" viewBox="' + data.viewBox + '" preserveAspectRatio="xMidYMid meet">' + paths + '</svg>';
+}
+function mountMuscleMap() {
+  ['front', 'back'].forEach(function (side) {
+    var svg = document.getElementById('mm-' + side);
+    if (svg) { try { var b = svg.getBBox(); svg.setAttribute('viewBox', (b.x - 18) + ' ' + (b.y - 18) + ' ' + (b.width + 36) + ' ' + (b.height + 36)); } catch (e) {} }
+  });
+  var wrap = document.getElementById('mmWrap');
+  if (wrap && !wrap._bound) {
+    wrap._bound = true;
+    wrap.addEventListener('click', function (e) {
+      var p = e.target.closest ? e.target.closest('path.m-mus') : null;
+      if (p) { haptic('light'); window.VF.muscleMenu(p.getAttribute('data-group')); }
+    });
+  }
+}
+function muscleMapPanel() {
+  var GR = ['chest', 'back', 'shoulders', 'arms', 'abs', 'legs'];
+  var ready = GR.filter(function (g) { return groupRecovery(g) >= 0.88; }).length;
+  var h = '<div class="coach"><span class="ci">🫀</span><div><b style="color:var(--text-hi)">Карта мышц</b><br>Тапни мышцу → упражнения или восстановление. Ярко-бирюзовые — <b style="color:var(--accent)">заряжены</b> и готовы к нагрузке, тусклые — ещё восстанавливаются.</div></div>';
+  h += '<div class="card glass-card" style="margin-top:14px"><div id="mmWrap" class="mmap-wrap">' + svgFor('front') + svgFor('back') + '</div>';
+  h += '<div class="mm-legend"><span><i class="d charged"></i>заряжена</span><span><i class="d mid"></i>восстанавливается</span><span><i class="d low"></i>устала</span></div>';
+  h += '<div class="hint" style="text-align:center">Готово к тренировке: <b style="color:var(--accent)" class="tnum">' + ready + '/6</b> групп · «заряд» считается по дням с последней нагрузки.</div></div>';
+  return h;
+}
+
 // ============================================================
 //  RENDER
 // ============================================================
@@ -421,7 +472,7 @@ function renderGym() {
   var seg = renderGym.seg || 'today';
   var rec = recommendDay();
   var h = '<div class="scr-head"><div><div class="eyebrow">Зал</div><h1>Качаемся</h1></div></div>';
-  h += '<div class="seg">' + segBtn('today', seg, 'Сессия') + segBtn('progress', seg, 'Прогресс') + segBtn('calendar', seg, 'Календарь') + '</div>';
+  h += '<div class="seg">' + segBtn('today', seg, 'Сессия') + segBtn('muscles', seg, 'Мышцы') + segBtn('progress', seg, 'Прогресс') + segBtn('calendar', seg, 'Календарь') + '</div>';
   if (seg === 'today') {
     h += '<div class="coach"><span class="ci">🤖</span><div><b style="color:var(--text-hi)">' + esc(rec.day.name) + '</b><br>Почему этот: дольше всего не тренировал эту группу (' + (rec.since > 90 ? 'ещё не было' : rec.since + ' дн. назад') + ') — восстановилась, бьём её.</div></div>';
     h += '<div style="height:14px"></div>';
@@ -443,6 +494,8 @@ function renderGym() {
         + '<div class="track" style="margin-top:10px"><div class="fill" style="width:' + clamp(pr.now / pr.future * 100, 5, 100) + '%"></div></div></div>';
     });
     h += '<div class="hint">Прогноз построен по двойной прогрессии: шаг прибавки и частота заложены в каждое упражнение. Реальные PR двигают линию быстрее.</div>';
+  } else if (seg === 'muscles') {
+    h += muscleMapPanel();
   } else {
     h += '<div class="section-title">Когда поднимать вес</div>';
     var ev = bumpCalendar(12), curMonth = '';
@@ -456,6 +509,7 @@ function renderGym() {
     h += '<div class="hint">Это ориентир по прогрессивной перегрузке. Если на тренировке вес дался тяжело (RPE ≥ 9.5) — приложение само сдвинет прибавку.</div>';
   }
   $('#screen-gym').innerHTML = h;
+  if (seg === 'muscles') mountMuscleMap();
 }
 renderGym.seg = 'today';
 function segBtn(id, cur2, label) { return '<button class="' + (cur2 === id ? 'on' : '') + '" onclick="VF.gymSeg(\'' + id + '\')">' + label + '</button>'; }
