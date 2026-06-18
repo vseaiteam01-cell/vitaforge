@@ -688,12 +688,11 @@ function renderHome() {
     h += '<div class="mm-legend"><span><i class="d charged"></i>заряжена</span><span><i class="d mid"></i>восст.</span><span><i class="d low"></i>устала</span></div>';
   }
   h += '<div class="hero-name">' + esc(sd.title) + '</div>';
-  h += '<div class="hero-sub">' + (hv === 'muscles' ? '👆 тапни мышцу → упражнения и восстановление' : esc((sd.bodyFatRange || '').split('—')[0])) + '</div>';
+  h += '<div class="hero-sub">👆 Тапни мышцу на фигуре → её упражнения и травмы</div>';
   h += '<div class="level-line"><div class="level-disc"><b class="tnum">' + li.level + '</b></div>'
     + '<div class="xpbar"><div class="meta"><span>Уровень ' + li.level + '</span><span><b class="tnum">' + fmt(li.into) + '</b> / ' + fmt(li.need) + ' XP</span></div>'
     + '<div class="track"><div class="fill" style="width:' + li.pct + '%"></div></div></div></div>';
   h += '</div></div>';
-  h += '<div class="seg" style="margin-top:14px"><button class="' + (hv === '3d' ? 'on' : '') + '" onclick="VF.heroView(\'3d\')">🧍 Аватар</button><button class="' + (hv === 'muscles' ? 'on' : '') + '" onclick="VF.heroView(\'muscles\')">🫀 Мышцы</button></div>';
   h += '<div class="row2" style="margin-top:var(--sp-5)">';
   h += '<div class="card" style="margin:0"><div class="eyebrow" style="color:var(--text-muted)">Тренировка дня</div>'
     + '<div style="color:var(--text-hi);font-weight:800;font-size:var(--fs-h3);margin:6px 0 2px">' + esc(rec.day.name.replace(/^День \d+ — /, '')) + '</div>'

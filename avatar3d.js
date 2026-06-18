@@ -79,6 +79,41 @@
     } catch (e) {}
   }
 
+  // тап по 3D-болвану -> определить мышцу по зоне тела -> подсветить точку + открыть меню
+  function muscleFromHit(pos, normal) {
+    var c = { x: 0, y: 0, z: 0 }, d = { x: 0.5, y: 1.7, z: 0.3 };
+    try { if (mv.getBoundingBoxCenter) c = mv.getBoundingBoxCenter(); } catch (e) {}
+    try { if (mv.getDimensions) d = mv.getDimensions(); } catch (e) {}
+    var ny = (pos.y - (c.y - d.y / 2)) / (d.y || 1);   // 0 низ .. 1 верх
+    var nx = (pos.x - c.x) / ((d.x / 2) || 1);          // -1..1
+    var front = (normal ? normal.z : 1) >= 0;
+    var ax = Math.abs(nx);
+    if (ny > 0.90) return front ? 'delts' : 'traps';
+    if (ny > 0.78) return ax > 0.5 ? 'delts' : (front ? 'chest' : 'traps');
+    if (ny > 0.62) { if (ax > 0.6) return front ? 'biceps' : 'triceps'; return front ? 'chest' : 'lats'; }
+    if (ny > 0.50) { if (ax > 0.7) return 'forearms'; return front ? 'abs' : 'lower_back'; }
+    if (ny > 0.34) { if (ax > 0.55) return 'forearms'; return front ? 'quads' : 'glutes'; }
+    if (ny > 0.16) return front ? 'quads' : 'hams';
+    return 'calves';
+  }
+  function showHitMarker(pos, normal) {
+    var el = mv.querySelector('.vf-hit');
+    if (!el) { el = document.createElement('div'); el.className = 'vf-hit'; el.slot = 'hotspot-hit'; el.innerHTML = '<i></i>'; mv.appendChild(el); }
+    var p = pos.x.toFixed(3) + ' ' + pos.y.toFixed(3) + ' ' + pos.z.toFixed(3);
+    var n = normal ? (normal.x.toFixed(2) + ' ' + normal.y.toFixed(2) + ' ' + normal.z.toFixed(2)) : '0 0 1';
+    el.setAttribute('data-position', p); el.setAttribute('data-normal', n); el.setAttribute('data-visibility-attribute', 'visible');
+    try { mv.updateHotspot({ name: 'hotspot-hit', position: p, normal: n }); } catch (e) {}
+    el.classList.remove('pulse'); void el.offsetWidth; el.classList.add('pulse');
+  }
+  function handleTap(e) {
+    var hit = null; try { hit = mv.positionAndNormalFromPoint(e.clientX, e.clientY); } catch (er) {}
+    if (!hit || !hit.position) return;
+    var fine = muscleFromHit(hit.position, hit.normal);
+    showHitMarker(hit.position, hit.normal);
+    try { if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) window.Telegram.WebApp.HapticFeedback.impactOccurred('medium'); } catch (e2) {}
+    if (window.VF && window.VF.muscleMenuFine) window.VF.muscleMenuFine(fine);
+  }
+
   function ensureMV() {
     if (mv) return mv;
     mv = document.createElement('model-viewer');
@@ -104,6 +139,13 @@
     mv.style.setProperty('--poster-color', 'transparent');
     mv.style.setProperty('--progress-bar-color', '#3FD3D8');
     mv.addEventListener('load', function () { mv.__scene = null; recolor(); applyMorph(); });
+    var _down = null;
+    mv.addEventListener('pointerdown', function (e) { _down = { x: e.clientX, y: e.clientY, t: Date.now() }; });
+    mv.addEventListener('pointerup', function (e) {
+      if (!_down) return; var dx = Math.abs(e.clientX - _down.x), dy = Math.abs(e.clientY - _down.y), dt = Date.now() - _down.t; _down = null;
+      if (dx > 9 || dy > 9 || dt > 600) return;  // это вращение/долгий тап, не тап по мышце
+      handleTap(e);
+    });
     return mv;
   }
 
@@ -130,7 +172,15 @@
     mount: mount, setParams: setParams,
     snap: function () { try { return mv ? mv.toDataURL('image/jpeg', 0.8) : null; } catch (e) { return 'err:' + e; } },
     _info: function () { if (!mv) return 'no-mv'; return { loaded: mv.loaded, src: mv.getAttribute('src'), morph: applyMorph(), cur: cur }; },
-    _setMF: function (m, f) { cur.muscle = m; cur.fat = f; return applyMorph(); }
+    _setMF: function (m, f) { cur.muscle = m; cur.fat = f; return applyMorph(); },
+    _hitTest: function (x, y) {
+      if (!mv) return 'no-mv'; var r = mv.getBoundingClientRect();
+      var px = x != null ? x : r.left + r.width / 2, py = y != null ? y : r.top + r.height * 0.42;
+      var hit = null; try { hit = mv.positionAndNormalFromPoint(px, py); } catch (e) { return 'err:' + e; }
+      if (!hit || !hit.position) return 'no-hit';
+      showHitMarker(hit.position, hit.normal);
+      return { muscle: muscleFromHit(hit.position, hit.normal), pos: [+hit.position.x.toFixed(2), +hit.position.y.toFixed(2), +hit.position.z.toFixed(2)] };
+    }
   };
   (window.__vfAvatarQueue || []).forEach(function (a) { try { mount(a[0], a[1]); } catch (e) {} });
   window.__vfAvatarQueue = [];
