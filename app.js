@@ -86,8 +86,39 @@ function load() {
   if (!S.tombstones) S.tombstones = {};
   S.v = 3;
   buildLib();
+  syncProgramRev();
   enrichProgram();
   return S;
+}
+// Нормативы живут в data.js, а рабочий стек — в localStorage. Без этой сверки
+// правка программы видна только новым пользователям, а у существующего навсегда
+// остаются прежние веса. Прогресс при этом не откатываем.
+function syncProgramRev() {
+  var def = window.DEFAULT_PROGRAM;
+  if (!def || !def.rev || S.programRev === def.rev) return;
+  var byId = {};
+  S.program.days.forEach(function (d) { d.exercises.forEach(function (e) { byId[e.id] = e; }); });
+  def.days.forEach(function (dd) {
+    var day = null;
+    S.program.days.forEach(function (d) { if (d.id === dd.id) day = d; });
+    if (!day) { day = { id: dd.id, name: dd.name, exercises: [] }; S.program.days.push(day); }
+    day.name = dd.name;
+    dd.exercises.forEach(function (de) {
+      var cur = byId[de.id];
+      if (!cur) {
+        // упражнение появилось в программе; выброшенное вручную не возвращаем
+        if (!S.tombstones[de.id]) day.exercises.push(JSON.parse(JSON.stringify(de)));
+        return;
+      }
+      // вес берём больший: если атлет уже прибавил сверх норматива — это его прогресс
+      cur.weight = Math.max(Number(cur.weight) || 0, Number(de.weight) || 0);
+      cur.name = de.name; cur.sets = de.sets; cur.range = de.range;
+      cur.inc = de.inc; cur.stepWeeks = de.stepWeeks; cur.note = de.note;
+      if (!cur.reps || cur.reps < de.range[0]) cur.reps = de.reps;
+    });
+  });
+  S.programRev = def.rev;
+  save();
 }
 function save() { try { localStorage.setItem(storeKey(), JSON.stringify(S)); } catch (e) {} }
 

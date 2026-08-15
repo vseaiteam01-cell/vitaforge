@@ -85,6 +85,35 @@ window.EX_IMAGES = {
    "assets/ex/delts_front_1.jpg"
   ]
  },
+ "bench_mch": {
+  "name": "Жим лёжа в тренажёре",
+  "en": "Leverage Chest Press",
+  "muscles": [
+   "chest"
+  ],
+  "secondary": [
+   "triceps",
+   "delts"
+  ],
+  "images": [
+   "assets/ex/bench_mch_0.jpg",
+   "assets/ex/bench_mch_1.jpg"
+  ]
+ },
+ "delts_rear": {
+  "name": "Задние дельты — махи в наклоне",
+  "en": "Bent-Over Lateral Raise",
+  "muscles": [
+   "delts"
+  ],
+  "secondary": [
+   "mid_back"
+  ],
+  "images": [
+   "assets/ex/delts_rear_0.jpg",
+   "assets/ex/delts_rear_1.jpg"
+  ]
+ },
  "row_chest": {
   "name": "Тяга сидя с упором в грудь",
   "en": "Chest-Supported Row",
@@ -236,26 +265,6 @@ window.EX_IMAGES = {
    "assets/ex/pec_deck_0.jpg",
    "assets/ex/pec_deck_1.jpg"
   ]
- },
- "bench_mch": {
-  "name": "Leverage Chest Press",
-  "muscles": [
-   "chest"
-  ],
-  "images": [
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Leverage_Chest_Press/0.jpg",
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Leverage_Chest_Press/1.jpg"
-  ]
- },
- "delts_rear": {
-  "name": "Reverse Machine Flyes",
-  "muscles": [
-   "shoulders"
-  ],
-  "images": [
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Reverse_Machine_Flyes/0.jpg",
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Reverse_Machine_Flyes/1.jpg"
-  ]
  }
 };
 
@@ -344,6 +353,34 @@ window.EX_GUIDE = {
    "Опускает рукояти слишком низко, вырывая плечевой сустав"
   ],
   "breathing": "Выдох при жиме вверх, вдох при опускании"
+ },
+ "bench_mch": {
+  "weight": "20 кг · 4 подхода, 12–15 повторов",
+  "steps": [
+   "Отрегулируй сиденье: рукояти на уровне середины груди",
+   "Прижми спину и таз к спинке, стопы поставь плотно на пол",
+   "Выжимай рукояти вперёд до почти прямых рук, локти не защёлкивай",
+   "Возвращай медленно, пока не почувствуешь растяжение груди"
+  ],
+  "mistakes": [
+   "Отрывает спину от спинки, выгибаясь мостиком",
+   "Бросает рукояти назад, отбивая вес стеком"
+  ],
+  "breathing": "Выдох при жиме вперёд, вдох при возврате"
+ },
+ "delts_rear": {
+  "weight": "7 кг · 4 подхода, 12–20 повторов",
+  "steps": [
+   "Наклонись вперёд с прямой спиной, корпус почти параллельно полу",
+   "Гантели держи под грудью, локти слегка согни и зафиксируй угол",
+   "Разводи руки в стороны до уровня спины, сводя лопатки",
+   "Опускай подконтрольно, не роняя гантели вниз"
+  ],
+  "mistakes": [
+   "Выпрямляет корпус и превращает мах в тягу",
+   "Берёт лишний вес и забрасывает руки рывком"
+  ],
+  "breathing": "Выдох при разведении, вдох при опускании"
  },
  "row_chest": {
   "weight": "40 кг → снизить до 30 кг · от 6 повторов с прибавлением",

@@ -184,6 +184,63 @@
           ],
           "breathing": "Выдох при жиме вверх, вдох при опускании",
           "prompt": "Two-panel side-by-side diptych, thin vertical divider in the center. IDENTICAL matte grey clay anatomical mannequin (faceless, bald, plain neutral grey shorts) in BOTH panels, IDENTICAL side profile camera angle, IDENTICAL soft studio lighting, IDENTICAL seamless light grey background. Full body visible, seated upright in a shoulder press machine with back against the pad. LEFT PANEL: elbows bent, hands gripping handles at shoulder height. RIGHT PANEL: same mannequin pressing the handles up overhead, arms nearly straight above the head. The front and lateral deltoid shoulder muscles glow luminous turquoise from beneath the surface, brightest in the right panel and dim in the left; all other muscles remain plain matte grey. Machine simplified, dark graphite, no branding. No text, no letters, no numbers, no watermark, no logos."
+        },
+        {
+          "key": "bench_mch",
+          "ru": "Жим лёжа в тренажёре",
+          "en": "Leverage Chest Press",
+          "equipment": "machine",
+          "weight": "20 кг · 4 подхода, 12–15 повторов",
+          "primary": [
+            "chest"
+          ],
+          "secondary": [
+            "triceps",
+            "delts"
+          ],
+          "view": "side",
+          "phase_start": "рукояти у груди, локти согнуты",
+          "phase_end": "руки выпрямлены вперёд",
+          "how_to": [
+            "Отрегулируй сиденье: рукояти на уровне середины груди",
+            "Прижми спину и таз к спинке, стопы поставь плотно на пол",
+            "Выжимай рукояти вперёд до почти прямых рук, локти не защёлкивай",
+            "Возвращай медленно, пока не почувствуешь растяжение груди"
+          ],
+          "mistakes": [
+            "Отрывает спину от спинки, выгибаясь мостиком",
+            "Бросает рукояти назад, отбивая вес стеком"
+          ],
+          "breathing": "Выдох при жиме вперёд, вдох при возврате",
+          "prompt": "см. ex_urls.json"
+        },
+        {
+          "key": "delts_rear",
+          "ru": "Задние дельты — махи в наклоне",
+          "en": "Bent-Over Lateral Raise",
+          "equipment": "dumbbell",
+          "weight": "7 кг · 4 подхода, 12–20 повторов",
+          "primary": [
+            "delts"
+          ],
+          "secondary": [
+            "mid_back"
+          ],
+          "view": "three-quarter rear",
+          "phase_start": "гантели под грудью на опущенных руках",
+          "phase_end": "руки разведены до уровня спины",
+          "how_to": [
+            "Наклонись вперёд с прямой спиной, корпус почти параллельно полу",
+            "Гантели держи под грудью, локти слегка согни и зафиксируй угол",
+            "Разводи руки в стороны до уровня спины, сводя лопатки",
+            "Опускай подконтрольно, не роняя гантели вниз"
+          ],
+          "mistakes": [
+            "Выпрямляет корпус и превращает мах в тягу",
+            "Берёт лишний вес и забрасывает руки рывком"
+          ],
+          "breathing": "Выдох при разведении, вдох при опускании",
+          "prompt": "см. ex_urls.json"
         }
       ]
     },
