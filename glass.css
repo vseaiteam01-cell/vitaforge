@@ -252,8 +252,10 @@ body::before {
 
 /* ===== exercise demo (execution image + worked-muscle highlight) ===== */
 .ex-demo { display: flex; gap: 12px; align-items: center; padding: 10px; margin-bottom: 14px; }
-.ed-anim { position: relative; width: 54%; aspect-ratio: 1/1; border-radius: var(--r-md); overflow: hidden; background: #eef0f2; flex: none; box-shadow: inset 0 0 0 1px rgba(255,255,255,.1); }
-.ed-anim img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+/* Кадры вертикальные (фигура в полный рост) — рамка 3:4 и contain,
+   иначе cover срезает манекену голову и ступни. Фон совпадает с фоном кадров. */
+.ed-anim { position: relative; width: 54%; aspect-ratio: 3/4; border-radius: var(--r-md); overflow: hidden; background: #eef0f2; flex: none; box-shadow: inset 0 0 0 1px rgba(255,255,255,.1); }
+.ed-anim img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
 .ed-anim img.f2 { animation: ed-fade 1.7s ease-in-out infinite; }
 @keyframes ed-fade { 0%,38% { opacity: 0; } 58%,100% { opacity: 1; } }
 .ed-mus { flex: 1; display: flex; flex-direction: column; align-items: center; min-width: 0; }
@@ -276,6 +278,16 @@ body::before {
 .exi-how { margin: 16px 0; }
 .exi-how-t, .exi-mus-t { font-family: var(--font-mono); font-size: var(--fs-label); text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--text-muted); font-weight: var(--fw-bold); margin-bottom: 7px; }
 .exi-how p { margin: 0; color: var(--text-mid); font-size: var(--fs-sm); line-height: 1.55; }
+.exi-steps { margin: 0; padding: 0; list-style: none; counter-reset: exs; }
+.exi-steps li { position: relative; counter-increment: exs; padding: 0 0 0 30px; margin-bottom: 9px; color: var(--text-mid); font-size: var(--fs-sm); line-height: 1.5; }
+.exi-steps li:last-child { margin-bottom: 0; }
+.exi-steps li::before { content: counter(exs); position: absolute; left: 0; top: 1px; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center; font-family: var(--font-mono); font-size: 11px; font-weight: var(--fw-bold); color: var(--accent); background: var(--accent-tint); border: 1px solid var(--accent-line); }
+.exi-breath { margin-top: 11px; padding: 8px 12px; border-radius: var(--r-md); background: var(--accent-tint); border: 1px solid var(--accent-line); color: var(--accent); font-size: var(--fs-sm); line-height: 1.45; }
+.exi-mist { margin: 0; padding: 0; list-style: none; }
+.exi-mist li { position: relative; padding-left: 18px; margin-bottom: 7px; color: var(--text-mid); font-size: var(--fs-sm); line-height: 1.5; }
+.exi-mist li:last-child { margin-bottom: 0; }
+.exi-mist li::before { content: ''; position: absolute; left: 3px; top: 8px; width: 6px; height: 6px; border-radius: 50%; background: var(--warn); }
+.exi-plan { margin: 14px 0 4px; font-family: var(--font-mono); font-size: var(--fs-label); text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--text-muted); }
 .exi-mus { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 18px; }
 .exi-m { font-size: var(--fs-sm); color: var(--text-muted); background: var(--glass-tint); border: 1px solid var(--glass-edge); border-radius: var(--r-pill); padding: 6px 13px; }
 .exi-m.prim { color: var(--accent); border-color: var(--accent-line); background: var(--accent-tint); font-weight: var(--fw-semi); }

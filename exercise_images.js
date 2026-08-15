@@ -1,22 +1,240 @@
+// Кадры упражнений: свои диптихи (старт | конец) с подсветкой рабочей мышцы.
+// Сгенерировано из my_program.json, исходники диптихов — ex_urls.json.
 window.EX_IMAGES = {
  "chest_up": {
-  "name": "Cable Crossover",
+  "name": "Сведение рук на верхних блоках",
+  "en": "High Cable Crossover",
   "muscles": [
    "chest"
   ],
+  "secondary": [
+   "delts"
+  ],
   "images": [
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Cable_Crossover/0.jpg",
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Cable_Crossover/1.jpg"
+   "assets/ex/chest_up_0.jpg",
+   "assets/ex/chest_up_1.jpg"
   ]
  },
  "chest_low": {
-  "name": "Low Cable Crossover",
+  "name": "Сведение рук на нижних блоках",
+  "en": "Low Cable Crossover",
   "muscles": [
    "chest"
   ],
+  "secondary": [
+   "delts"
+  ],
   "images": [
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Low_Cable_Crossover/0.jpg",
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Low_Cable_Crossover/1.jpg"
+   "assets/ex/chest_low_0.jpg",
+   "assets/ex/chest_low_1.jpg"
+  ]
+ },
+ "biceps_bar": {
+  "name": "Подъём штанги на бицепс стоя",
+  "en": "Barbell Curl",
+  "muscles": [
+   "biceps"
+  ],
+  "secondary": [
+   "forearms"
+  ],
+  "images": [
+   "assets/ex/biceps_bar_0.jpg",
+   "assets/ex/biceps_bar_1.jpg"
+  ]
+ },
+ "triceps_rev": {
+  "name": "Разгибание на блоке обратным хватом",
+  "en": "Reverse Grip Triceps Pushdown",
+  "muscles": [
+   "triceps"
+  ],
+  "secondary": [
+   "forearms"
+  ],
+  "images": [
+   "assets/ex/triceps_rev_0.jpg",
+   "assets/ex/triceps_rev_1.jpg"
+  ]
+ },
+ "delts_lat": {
+  "name": "Махи в тренажёре сидя («утёнок»)",
+  "en": "Machine Lateral Raise",
+  "muscles": [
+   "delts"
+  ],
+  "secondary": [
+   "traps"
+  ],
+  "images": [
+   "assets/ex/delts_lat_0.jpg",
+   "assets/ex/delts_lat_1.jpg"
+  ]
+ },
+ "delts_front": {
+  "name": "Жим в тренажёре сидя над головой",
+  "en": "Machine Shoulder Press",
+  "muscles": [
+   "delts"
+  ],
+  "secondary": [
+   "triceps"
+  ],
+  "images": [
+   "assets/ex/delts_front_0.jpg",
+   "assets/ex/delts_front_1.jpg"
+  ]
+ },
+ "row_chest": {
+  "name": "Тяга сидя с упором в грудь",
+  "en": "Chest-Supported Row",
+  "muscles": [
+   "mid_back"
+  ],
+  "secondary": [
+   "lats",
+   "biceps"
+  ],
+  "images": [
+   "assets/ex/row_chest_0.jpg",
+   "assets/ex/row_chest_1.jpg"
+  ]
+ },
+ "pullover": {
+  "name": "Пуловер на блоке прямыми руками",
+  "en": "Straight-Arm Pulldown",
+  "muscles": [
+   "lats"
+  ],
+  "secondary": [
+   "triceps",
+   "abs"
+  ],
+  "images": [
+   "assets/ex/pullover_0.jpg",
+   "assets/ex/pullover_1.jpg"
+  ]
+ },
+ "low_row": {
+  "name": "Горизонтальная тяга нижнего блока",
+  "en": "Seated Cable Row",
+  "muscles": [
+   "mid_back"
+  ],
+  "secondary": [
+   "lats",
+   "biceps"
+  ],
+  "images": [
+   "assets/ex/low_row_0.jpg",
+   "assets/ex/low_row_1.jpg"
+  ]
+ },
+ "abs_plan": {
+  "name": "Скручивания в тренажёре («планетарка»)",
+  "en": "Machine Ab Crunch",
+  "muscles": [
+   "abs"
+  ],
+  "secondary": [],
+  "images": [
+   "assets/ex/abs_plan_0.jpg",
+   "assets/ex/abs_plan_1.jpg"
+  ]
+ },
+ "neck": {
+  "name": "Тренажёр для шеи, четыре направления",
+  "en": "Neck Machine",
+  "muscles": [
+   "neck"
+  ],
+  "secondary": [
+   "traps"
+  ],
+  "images": [
+   "assets/ex/neck_0.jpg",
+   "assets/ex/neck_1.jpg"
+  ]
+ },
+ "db_press_close": {
+  "name": "Жим гантелей узким хватом лёжа",
+  "en": "Close-Grip Dumbbell Press",
+  "muscles": [
+   "triceps"
+  ],
+  "secondary": [
+   "chest",
+   "delts"
+  ],
+  "images": [
+   "assets/ex/db_press_close_0.jpg",
+   "assets/ex/db_press_close_1.jpg"
+  ]
+ },
+ "leg_ext": {
+  "name": "Разгибание ног сидя",
+  "en": "Seated Leg Extension",
+  "muscles": [
+   "quads"
+  ],
+  "secondary": [],
+  "images": [
+   "assets/ex/leg_ext_0.jpg",
+   "assets/ex/leg_ext_1.jpg"
+  ]
+ },
+ "leg_curl": {
+  "name": "Сгибание ног сидя",
+  "en": "Seated Leg Curl",
+  "muscles": [
+   "hams"
+  ],
+  "secondary": [
+   "calves"
+  ],
+  "images": [
+   "assets/ex/leg_curl_0.jpg",
+   "assets/ex/leg_curl_1.jpg"
+  ]
+ },
+ "calves": {
+  "name": "Подъёмы на носки",
+  "en": "Calf Raise",
+  "muscles": [
+   "calves"
+  ],
+  "secondary": [],
+  "images": [
+   "assets/ex/calves_0.jpg",
+   "assets/ex/calves_1.jpg"
+  ]
+ },
+ "glutes": {
+  "name": "Отведение ноги назад в тренажёре",
+  "en": "Glute Kickback Machine",
+  "muscles": [
+   "glutes"
+  ],
+  "secondary": [
+   "hams"
+  ],
+  "images": [
+   "assets/ex/glutes_0.jpg",
+   "assets/ex/glutes_1.jpg"
+  ]
+ },
+ "pec_deck": {
+  "name": "Сведение рук в тренажёре «бабочка»",
+  "en": "Pec Deck Fly",
+  "muscles": [
+   "chest"
+  ],
+  "secondary": [
+   "delts"
+  ],
+  "images": [
+   "assets/ex/pec_deck_0.jpg",
+   "assets/ex/pec_deck_1.jpg"
   ]
  },
  "bench_mch": {
@@ -29,46 +247,6 @@ window.EX_IMAGES = {
    "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Leverage_Chest_Press/1.jpg"
   ]
  },
- "biceps_bar": {
-  "name": "Barbell Curl",
-  "muscles": [
-   "biceps"
-  ],
-  "images": [
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Barbell_Curl/0.jpg",
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Barbell_Curl/1.jpg"
-  ]
- },
- "triceps_rev": {
-  "name": "Reverse Grip Triceps Pushdown",
-  "muscles": [
-   "triceps"
-  ],
-  "images": [
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Reverse_Grip_Triceps_Pushdown/0.jpg",
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Reverse_Grip_Triceps_Pushdown/1.jpg"
-  ]
- },
- "delts_lat": {
-  "name": "Side Lateral Raise",
-  "muscles": [
-   "shoulders"
-  ],
-  "images": [
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Side_Lateral_Raise/0.jpg",
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Side_Lateral_Raise/1.jpg"
-  ]
- },
- "delts_front": {
-  "name": "Machine Shoulder (Military) Press",
-  "muscles": [
-   "shoulders"
-  ],
-  "images": [
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Machine_Shoulder_Military_Press/0.jpg",
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Machine_Shoulder_Military_Press/1.jpg"
-  ]
- },
  "delts_rear": {
   "name": "Reverse Machine Flyes",
   "muscles": [
@@ -78,95 +256,247 @@ window.EX_IMAGES = {
    "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Reverse_Machine_Flyes/0.jpg",
    "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Reverse_Machine_Flyes/1.jpg"
   ]
+ }
+};
+
+// Ручные гайды для новичка: шаги, ошибки, дыхание. Показываются вместо авто-текста.
+window.EX_GUIDE = {
+ "chest_up": {
+  "weight": "12,5 кг · 4 подхода, от 7 повторов с прибавлением",
+  "steps": [
+   "Встань между блоками, одну ногу вынеси вперёд для устойчивости",
+   "Слегка наклонись вперёд, руки чуть согни в локтях и зафиксируй угол",
+   "Своди руки вниз и внутрь, пока кисти не встретятся у бёдер",
+   "Возвращай медленно, чувствуя растяжение груди"
+  ],
+  "mistakes": [
+   "Сгибает и разгибает локти — превращает сведение в разгибание на трицепс",
+   "Тянет весом корпуса, раскачиваясь вперёд-назад"
+  ],
+  "breathing": "Выдох на сведении, вдох на возврате"
+ },
+ "chest_low": {
+  "weight": "10,2 кг · 4 подхода, от 7 повторов",
+  "steps": [
+   "Возьми рукояти нижних блоков, встань по центру, корпус ровный",
+   "Держи локти чуть согнутыми и не меняй этот угол до конца подхода",
+   "Веди руки снизу вверх по дуге, сводя их перед грудью",
+   "Опускай подконтрольно, не роняя вес"
+  ],
+  "mistakes": [
+   "Задирает руки выше подбородка — нагрузка уходит с груди на плечи",
+   "Отклоняется назад, помогая поясницей"
+  ],
+  "breathing": "Выдох при сведении вверх, вдох при опускании"
+ },
+ "biceps_bar": {
+  "weight": "30 кг · первый подход от 11 повторов с прибавлением",
+  "steps": [
+   "Встань прямо, хват снизу чуть шире бёдер, локти прижми к бокам",
+   "Поднимай штангу за счёт бицепса, локти держи на месте",
+   "В верхней точке задержись на мгновение и сожми бицепс",
+   "Опускай в два раза медленнее, чем поднимал"
+  ],
+  "mistakes": [
+   "Уводит локти вперёд и выводит бицепс из работы",
+   "Раскачивает корпус, забрасывая штангу инерцией"
+  ],
+  "breathing": "Выдох на подъёме, вдох на опускании"
+ },
+ "triceps_rev": {
+  "weight": "22 кг · 4 подхода, от 6 повторов с нарастанием",
+  "steps": [
+   "Возьми рукоять верхнего блока хватом снизу, ладони смотрят вверх",
+   "Прижми локти к корпусу и держи их неподвижно всё упражнение",
+   "Разгибай руки вниз до полного выпрямления, трицепс сожми",
+   "Возвращай рукоять медленно, не давая ей утянуть локти вверх"
+  ],
+  "mistakes": [
+   "Отводит локти назад и подключает спину",
+   "Наваливается на рукоять весом тела вместо работы трицепсом"
+  ],
+  "breathing": "Выдох при разгибании, вдох при возврате"
+ },
+ "delts_lat": {
+  "weight": "36 кг · от 11 повторов",
+  "steps": [
+   "Сядь плотно, спину прижми к спинке, предплечья положи в упоры",
+   "Разводи руки в стороны строго до уровня плеч, не выше",
+   "В верхней точке на миг задержись, плечи не поднимай к ушам",
+   "Опускай медленно, не роняя вес на упор"
+  ],
+  "mistakes": [
+   "Поднимает плечи к ушам — работу забирают трапеции",
+   "Бросает вес вниз, теряя половину пользы подхода"
+  ],
+  "breathing": "Выдох при разведении, вдох при опускании"
+ },
+ "delts_front": {
+  "weight": "32 кг · от 10 повторов с нарастанием",
+  "steps": [
+   "Отрегулируй сиденье так, чтобы рукояти были на уровне плеч",
+   "Прижми поясницу к спинке и не отрывай её при жиме",
+   "Выжимай рукояти вверх до почти прямых рук, локти не защёлкивай",
+   "Опускай до уровня плеч и сразу начинай следующее повторение"
+  ],
+  "mistakes": [
+   "Выгибает поясницу дугой, перекладывая нагрузку на спину",
+   "Опускает рукояти слишком низко, вырывая плечевой сустав"
+  ],
+  "breathing": "Выдох при жиме вверх, вдох при опускании"
  },
  "row_chest": {
-  "name": "Leverage Iso Row",
-  "muscles": [
-   "lats"
+  "weight": "40 кг → снизить до 30 кг · от 6 повторов с прибавлением",
+  "steps": [
+   "Прижми грудь к упору, ноги поставь устойчиво, спину держи ровно",
+   "Начинай движение со сведения лопаток, а не с рывка руками",
+   "Тяни рукояти к низу живота, локти веди вдоль корпуса",
+   "Разгибай руки до конца, давая спине растянуться"
   ],
-  "images": [
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Leverage_Iso_Row/0.jpg",
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Leverage_Iso_Row/1.jpg"
-  ]
+  "mistakes": [
+   "Тянет только руками, забывая свести лопатки",
+   "Отрывает грудь от упора и раскачивается корпусом"
+  ],
+  "breathing": "Выдох при тяге на себя, вдох при разгибании рук"
  },
  "pullover": {
-  "name": "Straight-Arm Pulldown",
-  "muscles": [
-   "lats"
+  "weight": "22,5 кг · верхнее положение блока · от 13 повторов",
+  "steps": [
+   "Встань в шаге от блока, наклонись вперёд, спину держи прямой",
+   "Возьми рукоять прямыми руками и не сгибай локти всё упражнение",
+   "Веди рукоять по дуге вниз к бёдрам, чувствуя работу боков спины",
+   "Плавно отпускай руки вверх до полного растяжения широчайших"
   ],
-  "images": [
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Straight-Arm_Pulldown/0.jpg",
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Straight-Arm_Pulldown/1.jpg"
-  ]
+  "mistakes": [
+   "Сгибает локти и превращает упражнение в тягу на трицепс",
+   "Округляет поясницу, наклоняясь всем корпусом за весом"
+  ],
+  "breathing": "Выдох при движении вниз, вдох при возврате вверх"
  },
  "low_row": {
-  "name": "Seated Cable Rows",
-  "muscles": [
-   "middle back"
+  "weight": "45 кг · от 9 повторов с прибавлением",
+  "steps": [
+   "Сядь, упрись ногами в платформу, колени чуть согни",
+   "Держи спину прямой и не заваливайся назад за весом",
+   "Тяни рукоять к животу, сводя лопатки, локти вдоль корпуса",
+   "Отпускай руки вперёд подконтрольно, слегка растягивая спину"
   ],
-  "images": [
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Seated_Cable_Rows/0.jpg",
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Seated_Cable_Rows/1.jpg"
-  ]
+  "mistakes": [
+   "Раскачивается корпусом вперёд-назад, помогая поясницей",
+   "Тянет рукоять к груди высоко, включая вместо спины плечи"
+  ],
+  "breathing": "Выдох при тяге к животу, вдох при возврате"
  },
  "abs_plan": {
-  "name": "Cable Crunch",
-  "muscles": [
-   "abdominals"
+  "weight": "50 кг · от 10 повторов, прибавка по 2",
+  "steps": [
+   "Сядь, отрегулируй упор так, чтобы он лёг на верх груди",
+   "Скручивай корпус вперёд, притягивая рёбра к тазу",
+   "Работай прессом, а не руками — руки лишь придерживают рукояти",
+   "Разгибайся медленно, не давая весу распрямить тебя рывком"
   ],
-  "images": [
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Cable_Crunch/0.jpg",
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Cable_Crunch/1.jpg"
-  ]
+  "mistakes": [
+   "Тянет рукояти руками, оставляя пресс без работы",
+   "Двигается за счёт наклона в тазобедренном суставе, а не скручивания"
+  ],
+  "breathing": "Выдох при скручивании, вдох при разгибании"
  },
  "neck": {
-  "name": "Neck-SMR",
-  "muscles": [
-   "neck"
+  "weight": "14,7 кг · по 15 повторов в каждом направлении, 1 подход",
+  "steps": [
+   "Настрой подушку так, чтобы она мягко легла на лоб или висок",
+   "Двигай только головой, плечи и корпус держи неподвижно",
+   "Работай короткой амплитудой, без резких рывков и щелчков",
+   "Пройди все четыре направления: вперёд, назад и по бокам"
   ],
-  "images": [
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Neck-SMR/0.jpg",
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Neck-SMR/1.jpg"
-  ]
+  "mistakes": [
+   "Берёт большой вес и дёргает шеей — прямой путь к травме",
+   "Помогает корпусом, наклоняя всё тело вместо головы"
+  ],
+  "breathing": "Дыши ровно и непрерывно, задержка дыхания здесь опасна"
+ },
+ "db_press_close": {
+  "weight": "по 16 кг · от 12 повторов",
+  "steps": [
+   "Ляг на скамью, гантели держи рядом друг с другом над грудью",
+   "Локти веди близко к корпусу, а не разводи в стороны",
+   "Выжимай гантели вверх, держа их сомкнутыми",
+   "Опускай до касания груди, не роняя вес"
+  ],
+  "mistakes": [
+   "Разводит локти широко — нагрузка уходит с трицепса на грудь",
+   "Разъединяет гантели вверху, теряя смысл узкого хвата"
+  ],
+  "breathing": "Выдох при жиме вверх, вдох при опускании"
  },
  "leg_ext": {
-  "name": "Leg Extensions",
-  "muscles": [
-   "quadriceps"
+  "weight": "50 кг · 4 подхода, рабочий от 15 повторов, прибавка по 2",
+  "steps": [
+   "Сядь так, чтобы колени совпали с осью вращения тренажёра",
+   "Валик положи на нижнюю часть голени, чуть выше стоп",
+   "Разгибай ноги до прямой линии и на миг задержись вверху",
+   "Опускай медленно, не давая весу упасть на стек"
   ],
-  "images": [
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Leg_Extensions/0.jpg",
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Leg_Extensions/1.jpg"
-  ]
+  "mistakes": [
+   "Дёргает вес рывком и отрывает таз от сиденья",
+   "Бросает ноги вниз, теряя контроль над опусканием"
+  ],
+  "breathing": "Выдох при разгибании, вдох при опускании"
  },
  "leg_curl": {
-  "name": "Seated Leg Curl",
-  "muscles": [
-   "hamstrings"
+  "weight": "41 кг · 4 подхода, рабочий от 15 повторов",
+  "steps": [
+   "Сядь, зафиксируй бёдра верхним валиком, спину прижми к спинке",
+   "Валик должен лечь на заднюю часть голени над пятками",
+   "Сгибай ноги, уводя пятки как можно дальше под себя",
+   "Возвращай ноги вперёд медленно, не выпрямляя рывком"
   ],
-  "images": [
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Seated_Leg_Curl/0.jpg",
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Seated_Leg_Curl/1.jpg"
-  ]
+  "mistakes": [
+   "Отрывает таз от сиденья, помогая поясницей",
+   "Работает половиной амплитуды, едва сгибая колени"
+  ],
+  "breathing": "Выдох при сгибании, вдох при разгибании"
  },
  "calves": {
-  "name": "Standing Calf Raises",
-  "muscles": [
-   "calves"
+  "weight": "40 кг · рабочий от 17 повторов с прибавлением",
+  "steps": [
+   "Поставь носки на край площадки, пятки свободно свисают",
+   "Опусти пятки вниз до ощутимого растяжения икр",
+   "Поднимись на носки как можно выше и задержись на секунду",
+   "Опускайся медленно — икры любят долгую негативную фазу"
   ],
-  "images": [
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_Calf_Raises/0.jpg",
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Standing_Calf_Raises/1.jpg"
-  ]
+  "mistakes": [
+   "Пружинит короткими рывками без растяжения внизу",
+   "Сгибает колени, превращая подъём в мини-присед"
+  ],
+  "breathing": "Выдох на подъёме, вдох при опускании"
  },
  "glutes": {
-  "name": "Barbell Hip Thrust",
-  "muscles": [
-   "glutes"
+  "weight": "20 кг · рабочий от 11 повторов с прибавлением",
+  "steps": [
+   "Встань в тренажёр, упрись руками, корпус держи неподвижно",
+   "Отводи ногу назад, выжимая платформу пяткой",
+   "В конечной точке сожми ягодицу и задержись на секунду",
+   "Возвращай ногу медленно, не отбивая вес"
   ],
-  "images": [
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Barbell_Hip_Thrust/0.jpg",
-   "https://cdn.jsdelivr.net/gh/yuhonas/free-exercise-db@main/exercises/Barbell_Hip_Thrust/1.jpg"
-  ]
+  "mistakes": [
+   "Прогибает поясницу вместо работы ягодицей",
+   "Машет ногой по инерции, без паузы в сокращении"
+  ],
+  "breathing": "Выдох при отведении назад, вдох при возврате"
+ },
+ "pec_deck": {
+  "weight": "45 кг · от 11 повторов с прибавлением",
+  "steps": [
+   "Сядь так, чтобы рукояти оказались на уровне середины груди",
+   "Прижми спину к спинке и слегка сведи лопатки",
+   "Своди руки перед собой плавной дугой, до касания рукоятей",
+   "Разводи назад подконтрольно, не уводя локти дальше плеч"
+  ],
+  "mistakes": [
+   "Разводит руки слишком далеко назад, перегружая плечевой сустав",
+   "Отрывает спину от спинки, дожимая вес корпусом"
+  ],
+  "breathing": "Выдох при сведении, вдох при разведении"
  }
 };

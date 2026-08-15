@@ -386,9 +386,14 @@ function enrichProgram() {
     d.exercises.forEach(function (e) {
       if (!e.group) e.group = EX_MUSCLE[e.id] || 'other';
       var img = (window.EX_IMAGES && window.EX_IMAGES[e.id]) || {};
-      if (!e.primaryMuscles) e.primaryMuscles = (img.muscles || []).map(function (m) { return DB2FINE[m] || m; });
-      if (!e.svgSlugs) { var sl = []; (e.primaryMuscles || []).forEach(function (f) { slugsOfFine(f).forEach(function (s) { if (sl.indexOf(s) < 0) sl.push(s); }); }); e.svgSlugs = sl; }
-      if (!e.images) e.images = img.images || [];
+      // Кадры и мышцы — справочные данные, а не пользовательские: берём их из EX_IMAGES
+      // всегда, иначе в localStorage навечно застревают ссылки прошлой версии.
+      if (img.muscles && img.muscles.length) e.primaryMuscles = img.muscles.map(function (m) { return DB2FINE[m] || m; });
+      else if (!e.primaryMuscles) e.primaryMuscles = [];
+      if (img.secondary && img.secondary.length) e.secondaryMuscles = img.secondary.map(function (m) { return DB2FINE[m] || m; });
+      var sl = []; (e.primaryMuscles || []).forEach(function (f) { slugsOfFine(f).forEach(function (s) { if (sl.indexOf(s) < 0) sl.push(s); }); }); e.svgSlugs = sl;
+      if (img.images && img.images.length) e.images = img.images;
+      else if (!e.images) e.images = [];
     });
   });
 }
@@ -509,8 +514,8 @@ function doAdd(recId) { var e = addToStack(picker.dayId, recId); if (e) { hapNot
 var EQUIP_RU = { barbell: 'штанга', dumbbell: 'гантели', machine: 'тренажёр', cable: 'блок', 'body only': 'свой вес', kettlebells: 'гири', bands: 'резина', 'e-z curl bar': 'EZ-гриф', 'exercise ball': 'фитбол', 'medicine ball': 'набивной мяч', 'foam roll': 'ролл', other: 'инвентарь' };
 var LEVEL_RU = { beginner: 'новичок', intermediate: 'средний', expert: 'продвинутый' };
 function equipRu(e) { return EQUIP_RU[e] || e || 'свой вес'; }
-function exViewFromRec(r) { return { name: r.name, imgs: r.imgs || [], primary: (r.primary && r.primary.length ? r.primary : [r.muscle]), secondary: r.secondary || [], group: groupOfFine(r.muscle), equipment: r.equipment, mechanic: r.mechanic, force: r.force, level: r.level, range: r.reps }; }
-function exViewFromEx(e) { return { name: e.name, imgs: e.images || [], primary: e.primaryMuscles || [], secondary: e.secondaryMuscles || [], group: e.group || groupOfFine((e.primaryMuscles || [])[0]), equipment: e.equipment, mechanic: e.mechanic, force: e.force, level: e.level, range: e.range }; }
+function exViewFromRec(r) { return { id: r.id, name: r.name, imgs: r.imgs || [], primary: (r.primary && r.primary.length ? r.primary : [r.muscle]), secondary: r.secondary || [], group: groupOfFine(r.muscle), equipment: r.equipment, mechanic: r.mechanic, force: r.force, level: r.level, range: r.reps }; }
+function exViewFromEx(e) { return { id: e.id, name: e.name, imgs: e.images || [], primary: e.primaryMuscles || [], secondary: e.secondaryMuscles || [], group: e.group || groupOfFine((e.primaryMuscles || [])[0]), equipment: e.equipment, mechanic: e.mechanic, force: e.force, level: e.level, range: e.range }; }
 function exDemoImgs(imgs, group) {
   var cap = MUSCLE_INFO[group] ? MUSCLE_INFO[group].name : '';
   var mus = '<div class="ed-mus">' + miniMuscleSvg(group) + '<div class="ed-cap">' + esc(cap) + '</div></div>';
@@ -529,6 +534,22 @@ function howToText(v) {
   s += 'Анимация выше показывает крайние точки движения. Ориентир: ' + reps + ' повторов, 3–4 рабочих подхода. Двигайся подконтрольно, с полной амплитудой, без рывков — техника важнее веса.';
   return s;
 }
+// Блок «Как делать»: для упражнений программы — ручной разбор по шагам,
+// для остальных 865 из библиотеки — прежний авто-текст из механики движения.
+function howToHtml(v) {
+  var g = v.id && window.EX_GUIDE && window.EX_GUIDE[v.id];
+  if (!g) return '<div class="exi-how"><div class="exi-how-t">Как делать</div><p>' + esc(howToText(v)) + '</p></div>';
+  var h = '<div class="exi-how"><div class="exi-how-t">Как делать</div>';
+  h += '<ol class="exi-steps">' + g.steps.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ol>';
+  if (g.breathing) h += '<div class="exi-breath">' + esc(g.breathing) + '</div>';
+  h += '</div>';
+  if (g.mistakes && g.mistakes.length) {
+    h += '<div class="exi-how exi-warn"><div class="exi-how-t">Частые ошибки</div><ul class="exi-mist">'
+      + g.mistakes.map(function (s) { return '<li>' + esc(s) + '</li>'; }).join('') + '</ul></div>';
+  }
+  if (g.weight) h += '<div class="exi-plan">По программе: ' + esc(g.weight) + '</div>';
+  return h;
+}
 var exInfoRec = null;
 function openExInfo(ref, ctx) {
   var v, exId = null;
@@ -537,7 +558,7 @@ function openExInfo(ref, ctx) {
   var h = '<div class="grab"></div><h3 style="margin-bottom:8px">' + esc(v.name) + '</h3>';
   h += '<div class="exi-tags"><span>' + esc(equipRu(v.equipment)) + '</span><span>' + (v.mechanic === 'compound' ? 'базовое' : 'изолирующее') + '</span>' + (v.level ? '<span>' + (LEVEL_RU[v.level] || v.level) + '</span>' : '') + '</div>';
   h += exDemoImgs(v.imgs, v.group);
-  h += '<div class="exi-how"><div class="exi-how-t">Как делать</div><p>' + esc(howToText(v)) + '</p></div>';
+  h += howToHtml(v);
   var mus = (v.primary || []).filter(Boolean).map(function (m) { return '<span class="exi-m prim">' + esc(fineRu(m)) + '</span>'; }).join('') + (v.secondary || []).filter(Boolean).map(function (m) { return '<span class="exi-m">' + esc(fineRu(m)) + '</span>'; }).join('');
   if (mus) h += '<div class="exi-mus-t">Работают мышцы</div><div class="exi-mus">' + mus + '</div>';
   if (ctx === 'picker') h += '<button class="pill" onclick="VF.exInfoConfirm()">＋ Добавить в стек</button><button class="pill ghost sm" style="margin-top:8px" onclick="VF.openPickerBack()">‹ Назад к выбору</button>';

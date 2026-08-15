@@ -26,6 +26,11 @@ Thumbs.db
 assets/*_src.jpg
 assets/stage*.png
 
+# исходные диптихи упражнений (~105 МБ) и превью для приёмки —
+# нарезанные кадры assets/ex/*.jpg коммитим, исходники восстанавливаются по ex_urls.json
+assets/ex/_raw/
+assets/ex/_preview/
+
 assets/*_backup.glb
 assets/ecorche_src.jpg
 assets/freeex.json

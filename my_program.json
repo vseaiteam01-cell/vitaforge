@@ -1,0 +1,509 @@
+{
+  "_meta": {
+    "title": "Программа Сэра — 3 дня, 17 упражнений",
+    "source": "переписка MULan 10.08.2026",
+    "muscle_keys": "ключи MUSCLE_TAX (exercises.js): biceps triceps forearms chest delts lats traps mid_back lower_back abs quads hams glutes calves adductors neck",
+    "assumptions": [
+      "«утёнок» = тренажёр махов сидя (lateral raise machine)",
+      "«планетарка» = тренажёр скручиваний сидя с блинами",
+      "«грудное перекрытие» = сведение в бабочке / pec deck",
+      "«ягодичные 20 кг» = отведение ноги назад в тренажёре (вес мал для мостика)",
+      "пуловер = тяга прямыми руками на верхнем блоке"
+    ],
+    "img_style": "серый глиняный манекен, бирюзовое свечение мышц #54C4CE, светло-серый фон, диптих старт|конец"
+  },
+  "days": [
+    {
+      "day": 1,
+      "title": "Грудь, руки, плечи",
+      "exercises": [
+        {
+          "key": "chest_up",
+          "ru": "Сведение рук на верхних блоках",
+          "en": "High Cable Crossover",
+          "equipment": "cable",
+          "weight": "12,5 кг · 4 подхода, от 7 повторов с прибавлением",
+          "primary": [
+            "chest"
+          ],
+          "secondary": [
+            "delts"
+          ],
+          "view": "three-quarter front",
+          "phase_start": "руки разведены широко вверх, грудь растянута",
+          "phase_end": "руки сведены внизу перед бёдрами, грудь сжата",
+          "how_to": [
+            "Встань между блоками, одну ногу вынеси вперёд для устойчивости",
+            "Слегка наклонись вперёд, руки чуть согни в локтях и зафиксируй угол",
+            "Своди руки вниз и внутрь, пока кисти не встретятся у бёдер",
+            "Возвращай медленно, чувствуя растяжение груди"
+          ],
+          "mistakes": [
+            "Сгибает и разгибает локти — превращает сведение в разгибание на трицепс",
+            "Тянет весом корпуса, раскачиваясь вперёд-назад"
+          ],
+          "breathing": "Выдох на сведении, вдох на возврате",
+          "prompt": "Two-panel side-by-side diptych, thin vertical divider in the center. IDENTICAL matte grey clay anatomical mannequin (faceless, bald, no facial features, plain neutral grey shorts) in BOTH panels, IDENTICAL three-quarter front camera angle, IDENTICAL soft studio lighting, IDENTICAL seamless light grey background. Full body visible in both panels, standing between two high cable pulleys. LEFT PANEL: arms spread wide open at shoulder height, chest stretched, cables taut above. RIGHT PANEL: same mannequin with both hands brought together low in front of the hips, chest squeezed, deep contraction. The pectoralis major chest muscles glow luminous turquoise from beneath the surface like internal subsurface light, brightest in the right panel and dim in the left; all other muscles remain plain matte grey. Cable machine simplified, dark graphite, no branding. No text, no letters, no numbers, no watermark, no logos."
+        },
+        {
+          "key": "chest_low",
+          "ru": "Сведение рук на нижних блоках",
+          "en": "Low Cable Crossover",
+          "equipment": "cable",
+          "weight": "10,2 кг · 4 подхода, от 7 повторов",
+          "primary": [
+            "chest"
+          ],
+          "secondary": [
+            "delts"
+          ],
+          "view": "three-quarter front",
+          "phase_start": "руки внизу по бокам, ладони смотрят вперёд",
+          "phase_end": "руки сведены вверху перед грудью",
+          "how_to": [
+            "Возьми рукояти нижних блоков, встань по центру, корпус ровный",
+            "Держи локти чуть согнутыми и не меняй этот угол до конца подхода",
+            "Веди руки снизу вверх по дуге, сводя их перед грудью",
+            "Опускай подконтрольно, не роняя вес"
+          ],
+          "mistakes": [
+            "Задирает руки выше подбородка — нагрузка уходит с груди на плечи",
+            "Отклоняется назад, помогая поясницей"
+          ],
+          "breathing": "Выдох при сведении вверх, вдох при опускании",
+          "prompt": "Two-panel side-by-side diptych, thin vertical divider in the center. IDENTICAL matte grey clay anatomical mannequin (faceless, bald, plain neutral grey shorts) in BOTH panels, IDENTICAL three-quarter front camera angle, IDENTICAL soft studio lighting, IDENTICAL seamless light grey background. Full body visible, standing between two LOW cable pulleys near the floor. LEFT PANEL: arms down and spread apart at the sides, palms facing forward, cables taut below. RIGHT PANEL: same mannequin sweeping both arms upward and together in front of the upper chest, hands nearly touching at chest height. The upper pectoral chest muscles glow luminous turquoise from beneath the surface, brightest in the right panel and dim in the left; all other muscles remain plain matte grey. Cable machine simplified, dark graphite, no branding. No text, no letters, no numbers, no watermark, no logos."
+        },
+        {
+          "key": "biceps_bar",
+          "ru": "Подъём штанги на бицепс стоя",
+          "en": "Barbell Curl",
+          "equipment": "barbell",
+          "weight": "30 кг · первый подход от 11 повторов с прибавлением",
+          "primary": [
+            "biceps"
+          ],
+          "secondary": [
+            "forearms"
+          ],
+          "view": "side",
+          "phase_start": "штанга внизу на прямых руках у бёдер",
+          "phase_end": "штанга поднята к груди, бицепс сжат",
+          "how_to": [
+            "Встань прямо, хват снизу чуть шире бёдер, локти прижми к бокам",
+            "Поднимай штангу за счёт бицепса, локти держи на месте",
+            "В верхней точке задержись на мгновение и сожми бицепс",
+            "Опускай в два раза медленнее, чем поднимал"
+          ],
+          "mistakes": [
+            "Уводит локти вперёд и выводит бицепс из работы",
+            "Раскачивает корпус, забрасывая штангу инерцией"
+          ],
+          "breathing": "Выдох на подъёме, вдох на опускании",
+          "prompt": "Two-panel side-by-side diptych, thin vertical divider in the center. IDENTICAL matte grey clay anatomical mannequin (faceless, bald, plain neutral grey shorts) in BOTH panels, IDENTICAL side profile camera angle, IDENTICAL soft studio lighting, IDENTICAL seamless light grey background. Full body visible, standing upright holding a straight barbell with underhand grip. LEFT PANEL: arms fully extended down, barbell resting at thigh level. RIGHT PANEL: same mannequin with elbows pinned to the sides and the barbell curled up to chest height, forearms vertical. The biceps brachii muscles of both upper arms glow luminous turquoise from beneath the surface, brightest in the right panel and dim in the left; all other muscles remain plain matte grey. Barbell simplified, dark graphite, no branding. No text, no letters, no numbers, no watermark, no logos."
+        },
+        {
+          "key": "triceps_rev",
+          "ru": "Разгибание на блоке обратным хватом",
+          "en": "Reverse Grip Triceps Pushdown",
+          "equipment": "cable",
+          "weight": "22 кг · 4 подхода, от 6 повторов с нарастанием",
+          "primary": [
+            "triceps"
+          ],
+          "secondary": [
+            "forearms"
+          ],
+          "view": "side",
+          "phase_start": "руки согнуты, рукоять у груди",
+          "phase_end": "руки полностью выпрямлены вниз",
+          "how_to": [
+            "Возьми рукоять верхнего блока хватом снизу, ладони смотрят вверх",
+            "Прижми локти к корпусу и держи их неподвижно всё упражнение",
+            "Разгибай руки вниз до полного выпрямления, трицепс сожми",
+            "Возвращай рукоять медленно, не давая ей утянуть локти вверх"
+          ],
+          "mistakes": [
+            "Отводит локти назад и подключает спину",
+            "Наваливается на рукоять весом тела вместо работы трицепсом"
+          ],
+          "breathing": "Выдох при разгибании, вдох при возврате",
+          "prompt": "Two-panel side-by-side diptych, thin vertical divider in the center. IDENTICAL matte grey clay anatomical mannequin (faceless, bald, plain neutral grey shorts) in BOTH panels, IDENTICAL side profile camera angle, IDENTICAL soft studio lighting, IDENTICAL seamless light grey background. Full body visible, standing at a high cable pulley holding a straight bar with underhand supinated grip. LEFT PANEL: elbows bent, bar held up near chest level, forearms angled. RIGHT PANEL: same mannequin with elbows locked at the sides and arms fully extended straight down, bar at thigh level. The triceps muscles at the back of both upper arms glow luminous turquoise from beneath the surface, brightest in the right panel and dim in the left; all other muscles remain plain matte grey. Cable machine simplified, dark graphite, no branding. No text, no letters, no numbers, no watermark, no logos."
+        },
+        {
+          "key": "delts_lat",
+          "ru": "Махи в тренажёре сидя («утёнок»)",
+          "en": "Machine Lateral Raise",
+          "equipment": "machine",
+          "weight": "36 кг · от 11 повторов",
+          "primary": [
+            "delts"
+          ],
+          "secondary": [
+            "traps"
+          ],
+          "view": "front",
+          "phase_start": "руки опущены, упоры прижаты к предплечьям",
+          "phase_end": "руки разведены в стороны до уровня плеч",
+          "how_to": [
+            "Сядь плотно, спину прижми к спинке, предплечья положи в упоры",
+            "Разводи руки в стороны строго до уровня плеч, не выше",
+            "В верхней точке на миг задержись, плечи не поднимай к ушам",
+            "Опускай медленно, не роняя вес на упор"
+          ],
+          "mistakes": [
+            "Поднимает плечи к ушам — работу забирают трапеции",
+            "Бросает вес вниз, теряя половину пользы подхода"
+          ],
+          "breathing": "Выдох при разведении, вдох при опускании",
+          "prompt": "Two-panel side-by-side diptych, thin vertical divider in the center. IDENTICAL matte grey clay anatomical mannequin (faceless, bald, plain neutral grey shorts) in BOTH panels, IDENTICAL front camera angle, IDENTICAL soft studio lighting, IDENTICAL seamless light grey background. Full body visible, seated in a lateral raise machine with forearms against vertical padded levers. LEFT PANEL: arms hanging down at the sides, pads resting low, elbows close to torso. RIGHT PANEL: same mannequin with both arms lifted out sideways to shoulder height, pads raised, arms parallel to the floor forming a T shape. The lateral deltoid muscles on the outer shoulders glow luminous turquoise from beneath the surface, brightest in the right panel and dim in the left; all other muscles remain plain matte grey. Machine simplified, dark graphite, no branding. No text, no letters, no numbers, no watermark, no logos."
+        },
+        {
+          "key": "delts_front",
+          "ru": "Жим в тренажёре сидя над головой",
+          "en": "Machine Shoulder Press",
+          "equipment": "machine",
+          "weight": "32 кг · от 10 повторов с нарастанием",
+          "primary": [
+            "delts"
+          ],
+          "secondary": [
+            "triceps"
+          ],
+          "view": "side",
+          "phase_start": "рукояти на уровне плеч, локти согнуты",
+          "phase_end": "руки выпрямлены над головой",
+          "how_to": [
+            "Отрегулируй сиденье так, чтобы рукояти были на уровне плеч",
+            "Прижми поясницу к спинке и не отрывай её при жиме",
+            "Выжимай рукояти вверх до почти прямых рук, локти не защёлкивай",
+            "Опускай до уровня плеч и сразу начинай следующее повторение"
+          ],
+          "mistakes": [
+            "Выгибает поясницу дугой, перекладывая нагрузку на спину",
+            "Опускает рукояти слишком низко, вырывая плечевой сустав"
+          ],
+          "breathing": "Выдох при жиме вверх, вдох при опускании",
+          "prompt": "Two-panel side-by-side diptych, thin vertical divider in the center. IDENTICAL matte grey clay anatomical mannequin (faceless, bald, plain neutral grey shorts) in BOTH panels, IDENTICAL side profile camera angle, IDENTICAL soft studio lighting, IDENTICAL seamless light grey background. Full body visible, seated upright in a shoulder press machine with back against the pad. LEFT PANEL: elbows bent, hands gripping handles at shoulder height. RIGHT PANEL: same mannequin pressing the handles up overhead, arms nearly straight above the head. The front and lateral deltoid shoulder muscles glow luminous turquoise from beneath the surface, brightest in the right panel and dim in the left; all other muscles remain plain matte grey. Machine simplified, dark graphite, no branding. No text, no letters, no numbers, no watermark, no logos."
+        }
+      ]
+    },
+    {
+      "day": 2,
+      "title": "Спина",
+      "exercises": [
+        {
+          "key": "row_chest",
+          "ru": "Тяга сидя с упором в грудь",
+          "en": "Chest-Supported Row",
+          "equipment": "machine",
+          "weight": "40 кг → снизить до 30 кг · от 6 повторов с прибавлением",
+          "primary": [
+            "mid_back"
+          ],
+          "secondary": [
+            "lats",
+            "biceps"
+          ],
+          "view": "side",
+          "phase_start": "руки вытянуты вперёд, лопатки разведены",
+          "phase_end": "рукояти притянуты к корпусу, лопатки сведены",
+          "how_to": [
+            "Прижми грудь к упору, ноги поставь устойчиво, спину держи ровно",
+            "Начинай движение со сведения лопаток, а не с рывка руками",
+            "Тяни рукояти к низу живота, локти веди вдоль корпуса",
+            "Разгибай руки до конца, давая спине растянуться"
+          ],
+          "mistakes": [
+            "Тянет только руками, забывая свести лопатки",
+            "Отрывает грудь от упора и раскачивается корпусом"
+          ],
+          "breathing": "Выдох при тяге на себя, вдох при разгибании рук",
+          "prompt": "Two-panel side-by-side diptych, thin vertical divider in the center. IDENTICAL matte grey clay anatomical mannequin (faceless, bald, plain neutral grey shorts) in BOTH panels, IDENTICAL side profile camera angle, IDENTICAL soft studio lighting, IDENTICAL seamless light grey background. Full body visible, seated leaning forward with chest pressed against an angled support pad of a rowing machine. LEFT PANEL: arms fully extended forward, shoulder blades spread apart, handles far from body. RIGHT PANEL: same mannequin pulling the handles back to the torso, elbows driven behind the body, shoulder blades squeezed together. The rhomboid and middle trapezius muscles between the shoulder blades glow luminous turquoise from beneath the surface, brightest in the right panel and dim in the left; all other muscles remain plain matte grey. Machine simplified, dark graphite, no branding. No text, no letters, no numbers, no watermark, no logos."
+        },
+        {
+          "key": "pullover",
+          "ru": "Пуловер на блоке прямыми руками",
+          "en": "Straight-Arm Pulldown",
+          "equipment": "cable",
+          "weight": "22,5 кг · верхнее положение блока · от 13 повторов",
+          "primary": [
+            "lats"
+          ],
+          "secondary": [
+            "triceps",
+            "abs"
+          ],
+          "view": "side",
+          "phase_start": "прямые руки вытянуты вверх-вперёд",
+          "phase_end": "прямые руки приведены к бёдрам",
+          "how_to": [
+            "Встань в шаге от блока, наклонись вперёд, спину держи прямой",
+            "Возьми рукоять прямыми руками и не сгибай локти всё упражнение",
+            "Веди рукоять по дуге вниз к бёдрам, чувствуя работу боков спины",
+            "Плавно отпускай руки вверх до полного растяжения широчайших"
+          ],
+          "mistakes": [
+            "Сгибает локти и превращает упражнение в тягу на трицепс",
+            "Округляет поясницу, наклоняясь всем корпусом за весом"
+          ],
+          "breathing": "Выдох при движении вниз, вдох при возврате вверх",
+          "prompt": "Two-panel side-by-side diptych, thin vertical divider in the center. IDENTICAL matte grey clay anatomical mannequin (faceless, bald, plain neutral grey shorts) in BOTH panels, IDENTICAL side profile camera angle, IDENTICAL soft studio lighting, IDENTICAL seamless light grey background. Full body visible, standing hinged slightly forward at a high cable pulley, gripping a straight bar with completely straight arms. LEFT PANEL: straight arms reaching up and forward above head height, lats stretched. RIGHT PANEL: same mannequin with straight arms swept down in an arc to the front of the thighs, elbows never bending. The latissimus dorsi muscles along the sides of the back glow luminous turquoise from beneath the surface, brightest in the right panel and dim in the left; all other muscles remain plain matte grey. Cable machine simplified, dark graphite, no branding. No text, no letters, no numbers, no watermark, no logos."
+        },
+        {
+          "key": "low_row",
+          "ru": "Горизонтальная тяга нижнего блока",
+          "en": "Seated Cable Row",
+          "equipment": "cable",
+          "weight": "45 кг · от 9 повторов с прибавлением",
+          "primary": [
+            "mid_back"
+          ],
+          "secondary": [
+            "lats",
+            "biceps"
+          ],
+          "view": "side",
+          "phase_start": "корпус вертикально, руки вытянуты вперёд",
+          "phase_end": "рукоять у живота, лопатки сведены",
+          "how_to": [
+            "Сядь, упрись ногами в платформу, колени чуть согни",
+            "Держи спину прямой и не заваливайся назад за весом",
+            "Тяни рукоять к животу, сводя лопатки, локти вдоль корпуса",
+            "Отпускай руки вперёд подконтрольно, слегка растягивая спину"
+          ],
+          "mistakes": [
+            "Раскачивается корпусом вперёд-назад, помогая поясницей",
+            "Тянет рукоять к груди высоко, включая вместо спины плечи"
+          ],
+          "breathing": "Выдох при тяге к животу, вдох при возврате",
+          "prompt": "Two-panel side-by-side diptych, thin vertical divider in the center. IDENTICAL matte grey clay anatomical mannequin (faceless, bald, plain neutral grey shorts) in BOTH panels, IDENTICAL side profile camera angle, IDENTICAL soft studio lighting, IDENTICAL seamless light grey background. Full body visible, seated on a low cable row bench with feet braced on the footplate, torso upright. LEFT PANEL: arms extended forward, shoulder blades spread, handle far from body. RIGHT PANEL: same mannequin pulling the handle to the abdomen, elbows tucked past the ribs, shoulder blades squeezed together. The rhomboid and middle back muscles between the shoulder blades glow luminous turquoise from beneath the surface, brightest in the right panel and dim in the left; all other muscles remain plain matte grey. Cable machine simplified, dark graphite, no branding. No text, no letters, no numbers, no watermark, no logos."
+        },
+        {
+          "key": "abs_plan",
+          "ru": "Скручивания в тренажёре («планетарка»)",
+          "en": "Machine Ab Crunch",
+          "equipment": "machine",
+          "weight": "50 кг · от 10 повторов, прибавка по 2",
+          "primary": [
+            "abs"
+          ],
+          "secondary": [],
+          "view": "side",
+          "phase_start": "корпус выпрямлен, упор на груди",
+          "phase_end": "корпус скручен вперёд, рёбра к тазу",
+          "how_to": [
+            "Сядь, отрегулируй упор так, чтобы он лёг на верх груди",
+            "Скручивай корпус вперёд, притягивая рёбра к тазу",
+            "Работай прессом, а не руками — руки лишь придерживают рукояти",
+            "Разгибайся медленно, не давая весу распрямить тебя рывком"
+          ],
+          "mistakes": [
+            "Тянет рукояти руками, оставляя пресс без работы",
+            "Двигается за счёт наклона в тазобедренном суставе, а не скручивания"
+          ],
+          "breathing": "Выдох при скручивании, вдох при разгибании",
+          "prompt": "Two-panel side-by-side diptych, thin vertical divider in the center. IDENTICAL matte grey clay anatomical mannequin (faceless, bald, plain neutral grey shorts) in BOTH panels, IDENTICAL side profile camera angle, IDENTICAL soft studio lighting, IDENTICAL seamless light grey background. Full body visible, seated in an abdominal crunch machine with a padded lever across the upper chest. LEFT PANEL: torso upright and tall, spine neutral, machine lever back. RIGHT PANEL: same mannequin crunched forward, ribcage curled down toward the pelvis, spine flexed, lever driven forward. The rectus abdominis muscles of the abdomen glow luminous turquoise from beneath the surface, brightest in the right panel and dim in the left; all other muscles remain plain matte grey. Machine simplified, dark graphite, no branding. No text, no letters, no numbers, no watermark, no logos."
+        },
+        {
+          "key": "neck",
+          "ru": "Тренажёр для шеи, четыре направления",
+          "en": "Neck Machine",
+          "equipment": "machine",
+          "weight": "14,7 кг · по 15 повторов в каждом направлении, 1 подход",
+          "primary": [
+            "neck"
+          ],
+          "secondary": [
+            "traps"
+          ],
+          "view": "side",
+          "phase_start": "голова в нейтральном положении, подушка касается лба",
+          "phase_end": "голова наклонена до упора против сопротивления",
+          "how_to": [
+            "Настрой подушку так, чтобы она мягко легла на лоб или висок",
+            "Двигай только головой, плечи и корпус держи неподвижно",
+            "Работай короткой амплитудой, без резких рывков и щелчков",
+            "Пройди все четыре направления: вперёд, назад и по бокам"
+          ],
+          "mistakes": [
+            "Берёт большой вес и дёргает шеей — прямой путь к травме",
+            "Помогает корпусом, наклоняя всё тело вместо головы"
+          ],
+          "breathing": "Дыши ровно и непрерывно, задержка дыхания здесь опасна",
+          "prompt": "Two-panel side-by-side diptych, thin vertical divider in the center. IDENTICAL matte grey clay anatomical mannequin (faceless, bald, plain neutral grey shorts) in BOTH panels, IDENTICAL side profile camera angle, IDENTICAL soft studio lighting, IDENTICAL seamless light grey background. Upper body and head prominent, seated upright in a four-way neck training machine with a padded head lever resting against the forehead. LEFT PANEL: head in neutral upright position, neck straight, pad touching forehead. RIGHT PANEL: same mannequin flexing the head forward against the pad, chin lowered toward the chest, neck contracted. The sternocleidomastoid and neck muscles glow luminous turquoise from beneath the surface, brightest in the right panel and dim in the left; all other muscles remain plain matte grey. Machine simplified, dark graphite, no branding. No text, no letters, no numbers, no watermark, no logos."
+        },
+        {
+          "key": "db_press_close",
+          "ru": "Жим гантелей узким хватом лёжа",
+          "en": "Close-Grip Dumbbell Press",
+          "equipment": "dumbbell",
+          "weight": "по 16 кг · от 12 повторов",
+          "primary": [
+            "triceps"
+          ],
+          "secondary": [
+            "chest",
+            "delts"
+          ],
+          "view": "side",
+          "phase_start": "гантели у груди, локти прижаты к бокам",
+          "phase_end": "руки выпрямлены, гантели сведены вверху",
+          "how_to": [
+            "Ляг на скамью, гантели держи рядом друг с другом над грудью",
+            "Локти веди близко к корпусу, а не разводи в стороны",
+            "Выжимай гантели вверх, держа их сомкнутыми",
+            "Опускай до касания груди, не роняя вес"
+          ],
+          "mistakes": [
+            "Разводит локти широко — нагрузка уходит с трицепса на грудь",
+            "Разъединяет гантели вверху, теряя смысл узкого хвата"
+          ],
+          "breathing": "Выдох при жиме вверх, вдох при опускании",
+          "prompt": "Two-panel side-by-side diptych, thin vertical divider in the center. IDENTICAL matte grey clay anatomical mannequin (faceless, bald, plain neutral grey shorts) in BOTH panels, IDENTICAL side profile camera angle, IDENTICAL soft studio lighting, IDENTICAL seamless light grey background. Full body visible, lying supine on a flat bench holding two dumbbells pressed side by side together. LEFT PANEL: dumbbells lowered to the chest, elbows bent and tucked close to the ribs. RIGHT PANEL: same mannequin pressing both dumbbells straight up above the chest, arms extended, dumbbells still touching each other. The triceps muscles at the back of both upper arms glow luminous turquoise from beneath the surface, brightest in the right panel and dim in the left; all other muscles remain plain matte grey. Bench and dumbbells simplified, dark graphite, no branding. No text, no letters, no numbers, no watermark, no logos."
+        }
+      ]
+    },
+    {
+      "day": 3,
+      "title": "Ноги",
+      "exercises": [
+        {
+          "key": "leg_ext",
+          "ru": "Разгибание ног сидя",
+          "en": "Seated Leg Extension",
+          "equipment": "machine",
+          "weight": "50 кг · 4 подхода, рабочий от 15 повторов, прибавка по 2",
+          "primary": [
+            "quads"
+          ],
+          "secondary": [],
+          "view": "side",
+          "phase_start": "колени согнуты, голени опущены вниз",
+          "phase_end": "ноги выпрямлены горизонтально",
+          "how_to": [
+            "Сядь так, чтобы колени совпали с осью вращения тренажёра",
+            "Валик положи на нижнюю часть голени, чуть выше стоп",
+            "Разгибай ноги до прямой линии и на миг задержись вверху",
+            "Опускай медленно, не давая весу упасть на стек"
+          ],
+          "mistakes": [
+            "Дёргает вес рывком и отрывает таз от сиденья",
+            "Бросает ноги вниз, теряя контроль над опусканием"
+          ],
+          "breathing": "Выдох при разгибании, вдох при опускании",
+          "prompt": "Two-panel side-by-side diptych, thin vertical divider in the center. IDENTICAL matte grey clay anatomical mannequin (faceless, bald, plain neutral grey shorts) in BOTH panels, IDENTICAL side profile camera angle, IDENTICAL soft studio lighting, IDENTICAL seamless light grey background. Full body visible, seated in a leg extension machine with a padded roller against the lower shins. LEFT PANEL: knees bent about ninety degrees, lower legs hanging down, roller low. RIGHT PANEL: same mannequin with both legs fully extended straight out horizontally, roller lifted high, knees locked out. The quadriceps muscles on the front of both thighs glow luminous turquoise from beneath the surface, brightest in the right panel and dim in the left; all other muscles remain plain matte grey. Machine simplified, dark graphite, no branding. No text, no letters, no numbers, no watermark, no logos."
+        },
+        {
+          "key": "leg_curl",
+          "ru": "Сгибание ног сидя",
+          "en": "Seated Leg Curl",
+          "equipment": "machine",
+          "weight": "41 кг · 4 подхода, рабочий от 15 повторов",
+          "primary": [
+            "hams"
+          ],
+          "secondary": [
+            "calves"
+          ],
+          "view": "side",
+          "phase_start": "ноги выпрямлены вперёд",
+          "phase_end": "ноги согнуты, пятки уведены под сиденье",
+          "how_to": [
+            "Сядь, зафиксируй бёдра верхним валиком, спину прижми к спинке",
+            "Валик должен лечь на заднюю часть голени над пятками",
+            "Сгибай ноги, уводя пятки как можно дальше под себя",
+            "Возвращай ноги вперёд медленно, не выпрямляя рывком"
+          ],
+          "mistakes": [
+            "Отрывает таз от сиденья, помогая поясницей",
+            "Работает половиной амплитуды, едва сгибая колени"
+          ],
+          "breathing": "Выдох при сгибании, вдох при разгибании",
+          "prompt": "Two-panel side-by-side diptych, thin vertical divider in the center. IDENTICAL matte grey clay anatomical mannequin (faceless, bald, plain neutral grey shorts) in BOTH panels, IDENTICAL side profile camera angle, IDENTICAL soft studio lighting, IDENTICAL seamless light grey background. Full body visible, seated in a seated leg curl machine, thighs locked under a top pad, roller behind the lower calves. LEFT PANEL: legs extended straight forward, knees almost locked, roller forward. RIGHT PANEL: same mannequin curling both legs down and back, heels tucked underneath the seat, knees deeply bent. The hamstring muscles at the back of both thighs glow luminous turquoise from beneath the surface, brightest in the right panel and dim in the left; all other muscles remain plain matte grey. Machine simplified, dark graphite, no branding. No text, no letters, no numbers, no watermark, no logos."
+        },
+        {
+          "key": "calves",
+          "ru": "Подъёмы на носки",
+          "en": "Calf Raise",
+          "equipment": "machine",
+          "weight": "40 кг · рабочий от 17 повторов с прибавлением",
+          "primary": [
+            "calves"
+          ],
+          "secondary": [],
+          "view": "side",
+          "phase_start": "пятки опущены ниже площадки, икры растянуты",
+          "phase_end": "подъём на носки на максимальную высоту",
+          "how_to": [
+            "Поставь носки на край площадки, пятки свободно свисают",
+            "Опусти пятки вниз до ощутимого растяжения икр",
+            "Поднимись на носки как можно выше и задержись на секунду",
+            "Опускайся медленно — икры любят долгую негативную фазу"
+          ],
+          "mistakes": [
+            "Пружинит короткими рывками без растяжения внизу",
+            "Сгибает колени, превращая подъём в мини-присед"
+          ],
+          "breathing": "Выдох на подъёме, вдох при опускании",
+          "prompt": "Two-panel side-by-side diptych, thin vertical divider in the center. IDENTICAL matte grey clay anatomical mannequin (faceless, bald, plain neutral grey shorts) in BOTH panels, IDENTICAL side profile camera angle, IDENTICAL soft studio lighting, IDENTICAL seamless light grey background. Full body visible, standing on a calf raise machine platform with shoulder pads, toes on the edge of the step, legs straight. LEFT PANEL: heels dropped low below the platform edge, calves stretched, body lowered. RIGHT PANEL: same mannequin risen high onto the balls of the feet, heels lifted maximally, calves fully contracted. The gastrocnemius calf muscles on the back of both lower legs glow luminous turquoise from beneath the surface, brightest in the right panel and dim in the left; all other muscles remain plain matte grey. Machine simplified, dark graphite, no branding. No text, no letters, no numbers, no watermark, no logos."
+        },
+        {
+          "key": "glutes",
+          "ru": "Отведение ноги назад в тренажёре",
+          "en": "Glute Kickback Machine",
+          "equipment": "machine",
+          "weight": "20 кг · рабочий от 11 повторов с прибавлением",
+          "primary": [
+            "glutes"
+          ],
+          "secondary": [
+            "hams"
+          ],
+          "view": "side",
+          "phase_start": "рабочая нога согнута, стопа под тазом",
+          "phase_end": "нога отведена назад, ягодица сжата",
+          "how_to": [
+            "Встань в тренажёр, упрись руками, корпус держи неподвижно",
+            "Отводи ногу назад, выжимая платформу пяткой",
+            "В конечной точке сожми ягодицу и задержись на секунду",
+            "Возвращай ногу медленно, не отбивая вес"
+          ],
+          "mistakes": [
+            "Прогибает поясницу вместо работы ягодицей",
+            "Машет ногой по инерции, без паузы в сокращении"
+          ],
+          "breathing": "Выдох при отведении назад, вдох при возврате",
+          "prompt": "Two-panel side-by-side diptych, thin vertical divider in the center. IDENTICAL matte grey clay anatomical mannequin (faceless, bald, plain neutral grey shorts) in BOTH panels, IDENTICAL side profile camera angle, IDENTICAL soft studio lighting, IDENTICAL seamless light grey background. Full body visible, standing in a glute kickback machine, hands gripping the front support, torso upright and still, one foot on a rear pedal. LEFT PANEL: working leg bent and drawn forward, foot tucked under the hips. RIGHT PANEL: same mannequin driving that leg back and up behind the body, hip fully extended, glute squeezed. The gluteus maximus buttock muscle of the working leg glows luminous turquoise from beneath the surface, brightest in the right panel and dim in the left; all other muscles remain plain matte grey. Machine simplified, dark graphite, no branding. No text, no letters, no numbers, no watermark, no logos."
+        },
+        {
+          "key": "pec_deck",
+          "ru": "Сведение рук в тренажёре «бабочка»",
+          "en": "Pec Deck Fly",
+          "equipment": "machine",
+          "weight": "45 кг · от 11 повторов с прибавлением",
+          "primary": [
+            "chest"
+          ],
+          "secondary": [
+            "delts"
+          ],
+          "view": "front",
+          "phase_start": "руки разведены широко, грудь растянута",
+          "phase_end": "рукояти сведены перед грудью",
+          "how_to": [
+            "Сядь так, чтобы рукояти оказались на уровне середины груди",
+            "Прижми спину к спинке и слегка сведи лопатки",
+            "Своди руки перед собой плавной дугой, до касания рукоятей",
+            "Разводи назад подконтрольно, не уводя локти дальше плеч"
+          ],
+          "mistakes": [
+            "Разводит руки слишком далеко назад, перегружая плечевой сустав",
+            "Отрывает спину от спинки, дожимая вес корпусом"
+          ],
+          "breathing": "Выдох при сведении, вдох при разведении",
+          "prompt": "Two-panel side-by-side diptych, thin vertical divider in the center. IDENTICAL matte grey clay anatomical mannequin (faceless, bald, plain neutral grey shorts) in BOTH panels, IDENTICAL front camera angle, IDENTICAL soft studio lighting, IDENTICAL seamless light grey background. Full body visible, seated upright in a pec deck fly machine, back against the pad, forearms against vertical padded arms. LEFT PANEL: arms opened wide apart to the sides, chest stretched, pads far apart. RIGHT PANEL: same mannequin squeezing both padded arms together directly in front of the chest until they nearly touch, chest contracted. The pectoralis major chest muscles glow luminous turquoise from beneath the surface, brightest in the right panel and dim in the left; all other muscles remain plain matte grey. Machine simplified, dark graphite, no branding. No text, no letters, no numbers, no watermark, no logos."
+        }
+      ]
+    }
+  ]
+}
